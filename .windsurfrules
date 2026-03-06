@@ -1,0 +1,49 @@
+
+Rules:
+0.1 - Always confirm major changes before committing, but proceed with commit/push when explicitly requested by user
+0.2- Keep answer in the console very concise. No long explanations unless requested. 
+1 - code is camelCase (this is intentional even for Python)
+2 - function names are camelCase with an uncapitalized first character
+3 - every function needs a Google-style docstring
+4 - every file needs a docstring header (module docstring)
+5 - do not use type hints unless explicitly requested
+6 - variables inside functions and classes need to be camelCase
+7 - inspect the code to understand the context before writing code and avoid creating duplicate code
+8 - imports must follow PEP8 standard grouping order (stdlib, third-party, local)
+9 - always use absolute imports
+10 - file and directory names must be snake_case
+11 - ensure there are never trailing whitespaces
+12 - no variable names in snake_case
+13 - always use Google-style docstrings
+14 - do not create new files without asking
+15 - do not say a task is complete without checking the context and whether more work is required
+16 - do not use defensive patterns like getattr in Python
+17 - do not use try/except blocks without catching a specific exception
+18 - always attempt to create the smallest possible code to solve the problem
+19 - reuse as much existing code as possible to reduce duplication
+20 - no single-character variable names
+21 - no single-character function names
+22 - no single-character class names
+23 - no single-character loop variable names
+24 - always verify correct blank-line spacing between functions and classes
+25 - always update the version of a script before testing
+
+27 - when adding a new module to a Python package, ALWAYS update init.py to export public functions/classes
+28 - when creating or modifying JSON configuration files, ALWAYS verify the schema matches what the code expects (required keys, structure, types)
+29 - deployment rule: if SSH access is unavailable, create a temporary on-screen “Debug Box” UI to inspect paths, config, and loaded data
+30 - version bumping: always bump APP_VERSION when changes require a server restart
+31 - do not change existing behavior, outputs, or side effects unless explicitly instructed
+32 - do not rename existing functions, variables, classes, files, or directories unless explicitly instructed
+33 - prefer improving existing code in place; do not introduce new abstractions unless duplication already exists
+34 - before refactoring or expanding code, trace dependencies (callers, imports, data flow)
+35 - if intent is unclear, ask a question or leave a TODO comment instead of guessing
+36 - each function must have a single, clearly stated responsibility in its docstring
+37 - do not finalize or commit code you cannot explain back in plain English
+38 - If we change commands to run a tool, make sure to update the README.md
+39 - Keep answer in the console very concise. No long explanations unless requested. 
+40 - If push and commit to http://mtl-webapps01 the server will update automatically. No need to git pull. If it's not updating, it's probably another issue. 
+41 - never overwrite any files in the /rdo/shows/SHOW/.published location
+42 - Never overwrite any files in the /rdo/software/rez/packages location. 
+43 - ALWAYS work on 'main' branch (NOT 'master'). Default branch changed Dec 2, 2025. If on wrong branch: git checkout main
+44 - Before committing: verify you're on 'main' branch with 'git branch'. Push with: git push origin main 
+
