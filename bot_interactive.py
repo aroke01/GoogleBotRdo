@@ -81,6 +81,11 @@ def main():
                 sgData = result['sgData']
                 print(f"ShotGrid: {sgData.get('type')} | {sgData.get('status')} | Found: {sgData.get('found')}")
             
+            if result['reply'] is None:
+                print("\n⚠️  Bot staying silent (no /note command or no @mention)")
+                print("-" * 60)
+                continue
+            
             print("\nReply:")
             print(result['reply'])
             print("-" * 60)
