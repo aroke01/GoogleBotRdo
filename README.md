@@ -1,6 +1,6 @@
 # rdo_googlebot
 
-Internal Rodeo FX pipeline bot for Google Spaces. Queries ShotGrid and posts formatted replies.
+Internal Rodeo FX pipeline bot for Google Spaces. Queries ShotGrid and posts formatted replies with **multi-code support**.
 
 ## Quick Start
 
@@ -8,16 +8,22 @@ Internal Rodeo FX pipeline bot for Google Spaces. Queries ShotGrid and posts for
 # Run CLI demo tool
 rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py
 
-# Test with a message
-rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "@Louis Paré /sg 306dtt_1440 not seeing the MP in the bg"
+# Test with multiple codes
+rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "@lpare /note 306dtt_1000 check qc, chrNolmen rig broken"
+
+# Interactive mode
+rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_interactive.py
 ```
 
 ## Features
 
+- **Multi-code support** - Handle multiple shots/assets in one message
+- **Per-code notes** - Attach individual notes to each code
+- **Silent mode** - Only responds to `/note` commands (prevents flooding)
+- **Unknown codes shown** - Displays codes not found in ShotGrid
 - **READ-ONLY** ShotGrid queries (shots, assets, versions)
-- Parses Google Space messages (natural format or `/sg` commands)
-- Formats bot replies with ShotGrid links and status
-- CLI demo tool for testing before Cloud Run deployment
+- **Tractor log URLs** - Automatically detects and includes Tractor links
+- CLI demo tools for testing before Cloud Run deployment
 
 ## Project Structure
 
@@ -38,21 +44,30 @@ rdo_googlebot/
 
 ## Usage Examples
 
-### CLI Demo Tool
+### CLI Demo Tool (bot_simulate.py)
 
 ```bash
 # Interactive mode (paste message, Ctrl+D to submit)
-python bot_simulate.py
+rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py
 
-# Direct command
-python bot_simulate.py "@Louis Paré /sg 306dtt_1440 not seeing the MP"
+# Single code
+rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "@lpare /note 306dtt_1440 check qc"
 
-# Natural Space message format
-python bot_simulate.py "Eileen Bocanegra, 10:41 AM
-306dtt_1440 still not seeing the MP in the bg. @Louis Pare"
+# Multiple codes with per-code notes
+rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "@lpare /note 306dtt_1000 check qc, chrNolmen rig broken"
+
+# Multiple codes with shared note
+rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "@lpare /note 306dtt_1000 518dvd_4300 both have cache issues"
 ```
 
-### Example Output
+### Interactive Mode (bot_interactive.py)
+
+```bash
+# Start interactive mode - paste messages and get instant replies
+rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_interactive.py
+```
+
+### Example Output (Multi-Code)
 
 ```
 ============================================================
@@ -60,30 +75,23 @@ Processing message...
 ============================================================
 
 Parsed:
-  Tagged: Louis Pare
-  Code: 306dtt_1440
-  Note: still not seeing the MP in the bg.
+  @mentions: lpare, john
+  Codes found: 2
 
-Querying ShotGrid for: 306dtt_1440
-
-ShotGrid result:
-  Found: True
-  Type: Shot
-  ID: 228221
-  Status: ip
+Querying ShotGrid...
+  ✓ 306dtt_1000 — Shot (status: ip)
+  ✓ chrNolmen — Asset (status: cmpt)
 
 ============================================================
-Bot reply:
+Bot reply (posting to Space):
 ============================================================
-✅ Message recorded
-
-@Louis Pare — please check 306dtt_1440
-"still not seeing the MP in the bg."
-
-Shot status: ip
-→ ShotGrid: https://rodeofx.shotgrid.autodesk.com/detail/Shot/228221
-Ticket sent to CG Dashboard
+✅ Recorded — 2 items
+@lpare @john — please check:
+- 306dtt_1000 → ShotGrid (check qc)
+- chrNolmen → ShotGrid (rig broken)
 ============================================================
+
+✓ Posted to Space (HTTP 200)
 ```
 
 ## Configuration
@@ -120,25 +128,77 @@ rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- py
 rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "@User /sg 001_wag010 test note"
 ```
 
-## Message Parsing
+## Message Formats
 
-The bot supports two message formats:
-
-### Format 1: `/sg` Command
+### Single Code with Note
 ```
-@Louis Paré /sg 306dtt_1440 not seeing the MP in the bg
+@lpare /note 306dtt_1000 check the qc please
 ```
-
-### Format 2: Natural Space Message
+**Reply:**
 ```
-Eileen Bocanegra, 10:41 AM
-306dtt_1440 still not seeing the MP in the bg. @Louis Pare
+✅ recorded: to lpare - Please check 306dtt_1000, check the qc please → ShotGrid
 ```
 
-Both formats extract:
-- **Tagged user**: Who is being asked (`@Louis Paré`)
-- **Code**: Shot/asset code (`306dtt_1440`)
-- **Note**: Message text (`not seeing the MP in the bg`)
+### Multiple Codes with Per-Code Notes (Comma-Separated)
+```
+@lpare /note 306dtt_1000 check qc, chrNolmen rig broken, 305dtt_0200 cache issues
+```
+**Reply:**
+```
+✅ Recorded — 3 items
+@lpare — please check:
+- 306dtt_1000 → ShotGrid (check qc)
+- chrNolmen → ShotGrid (rig broken)
+- 305dtt_0200 Unknown shot/asset (cache issues)
+```
+
+### Multiple Codes with Shared Note (Space-Separated)
+```
+@lpare /note 306dtt_1000 518dvd_4300 both have cache issues
+```
+**Reply:**
+```
+✅ Recorded — 2 items
+@lpare — please check:
+- 306dtt_1000 → ShotGrid
+- 518dvd_4300 → ShotGrid
+Note: both have cache issues
+```
+
+### Multiple @mentions
+```
+@lpare @john /note 306dtt_1000 check this, chrNolmen review rig
+```
+**Reply:**
+```
+✅ Recorded — 2 items
+@lpare @john — please check:
+- 306dtt_1000 → ShotGrid (check this)
+- chrNolmen → ShotGrid (review rig)
+```
+
+### With Tractor Log URL
+```
+@lpare /note 306dtt_1000 failed render, see http://tractor/tv/#jid=4448933
+```
+**Reply:**
+```
+✅ Recorded — 2 items
+@lpare — please check:
+- 306dtt_1000 → ShotGrid (failed render)
+- Tractor log: http://tractor/tv/#jid=4448933
+```
+
+### Silent Mode (No /note Command)
+```
+test
+```
+**Reply:** *(stays silent, no message posted)*
+
+```
+@lpare 306dtt_1000 has issues
+```
+**Reply:** *(stays silent, requires /note command)*
 
 ## ShotGrid Lookup Logic
 
@@ -148,20 +208,13 @@ Both formats extract:
 
 Returns: found, type, id, code, status, link
 
-## Reply Format
+## Supported Code Patterns
 
-```
-✅ Message recorded
-
-@User — please check CODE
-"note text"
-
-Shot status: STATUS
-→ ShotGrid: LINK
-Ticket sent to CG Dashboard
-```
-
-Pipeline issues shown only if detected (`isOutOfDate = true`).
+- **Shot codes:** `306dtt_1440`, `518dvd_4300` (3 digits + 3 letters + underscore + 4 digits)
+- **Asset codes:** `chrNolmen`, `setWarehouse` (3 lowercase + capital + rest)
+- **Version codes:** `306dtt_1980.qcani.primary.main.defPart.v13`
+- **Version IDs:** `ID: 4367413` or bare 7-digit numbers
+- **Tractor URLs:** `http://tractor/tv/#jid=4448933`
 
 ## Coding Conventions
 
@@ -204,9 +257,10 @@ Pipeline issues shown only if detected (`isOutOfDate = true`).
 - Check `api.key` has correct `SG_SCRIPT_NAME` and `SG_SCRIPT_KEY`
 - Script name should match ShotGrid API script (e.g., `shell`)
 
-### "No shot/asset code found"
-- Message must contain shot code pattern: `###xxx_####` (e.g., `306dtt_1440`)
-- Or use `/sg CODE` command format
+### Bot Stays Silent
+- Message must contain `/note` command to trigger bot
+- Message must contain at least one `@mention`
+- This prevents flooding the Space with error messages
 
 ### "Not found in ShotGrid"
 - Code doesn't match any Shot, Asset, or Version
