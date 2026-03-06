@@ -16,7 +16,9 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from bots.sgbot import processSgCommand
+from core.parser import parseAllCodes
+from core.shotgrid import lookupEntity
+from core.formatter import formatMultiCodeReply
 from core.webhook import postToSpace
 from core.config import getSpaceIdFromApiKey, getShowFromSpaceId
 
@@ -61,37 +63,70 @@ def main():
             if not currentShowCode:
                 currentShowCode = "lbp3"
             
-            result = processSgCommand(rawMessage, useMarkdown=True, showCode=currentShowCode, spaceId=spaceId)
+            parsed = parseAllCodes(rawMessage)
             
-            if result.get('isConfigCommand'):
-                print(result['reply'])
-                print("-" * 60)
-                
-                try:
-                    response = postToSpace(result['reply'])
-                    print(f"✓ Posted to Space (HTTP {response.status_code})")
-                except Exception as exc:
-                    print(f"✗ Failed to post: {exc}")
-                
-                continue
-            
-            print(f"Parsed: @{result['taggedName'] or '(none)'} | {result['code'] or '(none)'} | {result['note'][:30] if result.get('note') else '(none)'}...")
-            
-            if result.get('sgData'):
-                sgData = result['sgData']
-                print(f"ShotGrid: {sgData.get('type')} | {sgData.get('status')} | Found: {sgData.get('found')}")
-            
-            if result['reply'] is None:
-                print("\n⚠️  Bot staying silent (no /note command or no @mention)")
+            if not parsed['hasNoteCommand']:
+                print("⚠️  No /note command found, staying silent.")
                 print("-" * 60)
                 continue
+            
+            if not parsed['taggedNames']:
+                print("⚠️  No @mention found, staying silent.")
+                print("-" * 60)
+                continue
+            
+            if not parsed['codeSegments']:
+                print("⚠️  No codes found, staying silent.")
+                print("-" * 60)
+                continue
+            
+            print(f"Parsed:")
+            print(f"  @mentions: {', '.join(parsed['taggedNames'])}")
+            print(f"  Codes found: {len(parsed['codeSegments'])}")
+            if parsed['tractorUrl']:
+                print(f"  Tractor URL: {parsed['tractorUrl']}")
+            if parsed['sharedNote']:
+                print(f"  Shared note: {parsed['sharedNote']}")
+            
+            validCodeSegments = []
+            invalidCount = 0
+            
+            print("\nQuerying ShotGrid...")
+            for segment in parsed['codeSegments']:
+                code = segment['code']
+                sgData = lookupEntity(code, currentShowCode)
+                
+                if sgData.get('found'):
+                    validCodeSegments.append({
+                        'code': code,
+                        'note': segment.get('note', ''),
+                        'sgLink': sgData.get('link')
+                    })
+                    print(f"  ✓ {code} — {sgData.get('type')} (status: {sgData.get('status')})")
+                else:
+                    invalidCount += 1
+                    validCodeSegments.append({
+                        'code': code,
+                        'note': segment.get('note', ''),
+                        'sgLink': None
+                    })
+                    print(f"  ✗ {code} — not found")
+            
+            reply = formatMultiCodeReply(
+                taggedNames=parsed['taggedNames'],
+                validCodeSegments=[s for s in validCodeSegments if s['sgLink']],
+                tractorUrl=parsed['tractorUrl'],
+                invalidCount=invalidCount,
+                sharedNote=parsed['sharedNote'],
+                useMarkdown=True
+            )
             
             print("\nReply:")
-            print(result['reply'])
+            print(reply)
             print("-" * 60)
             
             try:
-                response = postToSpace(result['reply'])
+                response = postToSpace(reply)
                 print(f"✓ Posted to Space (HTTP {response.status_code})")
             except Exception as exc:
                 print(f"✗ Failed to post: {exc}")
