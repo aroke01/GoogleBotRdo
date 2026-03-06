@@ -70,6 +70,17 @@ def processSgCommand(rawMessage, useMarkdown=False, showCode="lbp3", spaceId=Non
             'isConfigCommand': bool
         }
     """
+    if '/note' not in rawMessage.lower():
+        return {
+            'success': False,
+            'reply': None,
+            'taggedName': None,
+            'code': None,
+            'note': '',
+            'sgData': None,
+            'isConfigCommand': False
+        }
+    
     taggedName, code, note, isConfigCommand, configShowCode = parseMessage(rawMessage)
     
     if isConfigCommand:
@@ -82,10 +93,21 @@ def processSgCommand(rawMessage, useMarkdown=False, showCode="lbp3", spaceId=Non
                 'isConfigCommand': True
             }
     
+    if not taggedName:
+        return {
+            'success': False,
+            'reply': None,
+            'taggedName': None,
+            'code': None,
+            'note': '',
+            'sgData': None,
+            'isConfigCommand': False
+        }
+    
     if not code:
         return {
             'success': False,
-            'reply': "❓ No shot/asset code found in message.",
+            'reply': None,
             'taggedName': None,
             'code': None,
             'note': '',
@@ -131,6 +153,18 @@ def processSgCommandVerbose(rawMessage, useMarkdown=False, showCode="lbp3", spac
     print("Processing message...")
     print("=" * 60)
     
+    if '/note' not in rawMessage.lower():
+        print("\n⚠️  No /note command found, staying silent.")
+        return {
+            'success': False,
+            'reply': None,
+            'taggedName': None,
+            'code': None,
+            'note': '',
+            'sgData': None,
+            'isConfigCommand': False
+        }
+    
     taggedName, code, note, isConfigCommand, configShowCode = parseMessage(rawMessage)
     
     if isConfigCommand:
@@ -153,12 +187,23 @@ def processSgCommandVerbose(rawMessage, useMarkdown=False, showCode="lbp3", spac
     print(f"  Code: {code or '(none)'}")
     print(f"  Note: {note or '(none)'}")
     
-    if not code:
-        reply = "❓ No shot/asset code found in message."
-        print(f"\n{reply}")
+    if not taggedName:
+        print("\n⚠️  No @mention found, staying silent.")
         return {
             'success': False,
-            'reply': reply,
+            'reply': None,
+            'taggedName': None,
+            'code': None,
+            'note': '',
+            'sgData': None,
+            'isConfigCommand': False
+        }
+    
+    if not code:
+        print("\n⚠️  No code found, staying silent.")
+        return {
+            'success': False,
+            'reply': None,
             'taggedName': None,
             'code': None,
             'note': '',
