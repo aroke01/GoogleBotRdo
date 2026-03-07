@@ -29,7 +29,7 @@ def formatReply(taggedName, code, note, sgData, senderName=None):
         parts.append(f"from {senderName}")
     
     if taggedName:
-        parts.append(f"to {taggedName}")
+        parts.append(f"to <users/{taggedName}>")
     
     parts.append("-")
     
@@ -71,7 +71,7 @@ def formatReplyMarkdown(taggedName, code, note, sgData, senderName=None):
         parts.append(f"from {senderName}")
     
     if taggedName:
-        parts.append(f"to {taggedName}")
+        parts.append(f"to <users/{taggedName}>")
     
     parts.append("-")
     
@@ -116,7 +116,7 @@ def formatMultiCodeReply(taggedNames, validCodeSegments, tractorUrl, invalidCoun
         note = segment.get('note', '') or sharedNote or ''
         sgLink = segment.get('sgLink')
         
-        taggedStr = ' '.join(taggedNames) if taggedNames else ''
+        taggedStr = ' '.join([f"<users/{name}>" for name in taggedNames]) if taggedNames else ''
         
         parts = ["📝 recorded:"]
         if taggedStr:
@@ -139,7 +139,7 @@ def formatMultiCodeReply(taggedNames, validCodeSegments, tractorUrl, invalidCoun
     lines.append(f"📝 Recorded — {totalItems} item{'s' if totalItems > 1 else ''}")
     
     if taggedNames:
-        mentionStr = ' '.join([f"@{name}" for name in taggedNames])
+        mentionStr = ' '.join([f"<users/{name}>" for name in taggedNames])
         lines.append(f"{mentionStr} — please check:")
     else:
         lines.append("Please check:")
