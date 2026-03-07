@@ -130,13 +130,18 @@ rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- py
 
 ## Message Formats
 
+**Flexible Command Order:**
+The `/sg` command can be placed before or after @mentions:
+- `@lpare /sg 306dtt_1000 check this` ✅
+- `/sg @lpare 306dtt_1000 check this` ✅
+
 ### Single Code with Note
 ```
 @lpare /sg 306dtt_1000 check the qc please
 ```
 **Reply:**
 ```
-📝 recorded: to lpare - Please check 306dtt_1000, check the qc please → ShotGrid
+📝 recorded: to @lpare - Please check 306dtt_1000, check the qc please → ShotGrid
 ```
 
 ### Multiple Codes with Per-Code Notes (Comma-Separated)
@@ -262,7 +267,16 @@ Returns: found, type, id, code, status, link
 - Message must contain at least one `@mention`
 - This prevents flooding the Space with error messages
 
+**Command Flexibility:**
+- `/sg` can appear before or after @mentions
+- Examples: `@user /sg code` or `/sg @user code` both work
+
 **Note:** The 📝 emoji in bot replies prepares for future webapps-based ticket system integration.
+
+**User Mentions:**
+- Bot uses `@username` format in replies
+- Webhooks cannot create clickable mentions (Google Chat API limitation)
+- Users see readable @mentions but won't receive notification pings
 
 ### "Not found in ShotGrid"
 - Code doesn't match any Shot, Asset, or Version
