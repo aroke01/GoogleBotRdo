@@ -136,11 +136,17 @@ def parseAllCodes(text):
     if tractorMatch:
         result['tractorUrl'] = tractorMatch.group(1)
     
+    # Match /sg followed by content, handling both "/sg @user code" and "@user /sg code"
     noteCommandMatch = re.search(r'/sg\s+(.+)', text, re.IGNORECASE)
     if not noteCommandMatch:
-        return result
-    
-    afterNote = noteCommandMatch.group(1).strip()
+        # Try alternate format: content before /sg
+        beforeSgMatch = re.search(r'(.+?)\s+/sg', text, re.IGNORECASE)
+        if beforeSgMatch:
+            afterNote = beforeSgMatch.group(1).strip()
+        else:
+            return result
+    else:
+        afterNote = noteCommandMatch.group(1).strip()
     
     if result['tractorUrl']:
         afterNote = afterNote.replace(result['tractorUrl'], '').strip()
