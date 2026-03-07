@@ -9,7 +9,7 @@ Internal Rodeo FX pipeline bot for Google Spaces. Queries ShotGrid and posts for
 rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py
 
 # Test with multiple codes
-rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "@lpare /note 306dtt_1000 check qc, chrNolmen rig broken"
+rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "@lpare /sg 306dtt_1000 check qc, chrNolmen rig broken"
 
 # Interactive mode
 rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_interactive.py
@@ -19,7 +19,7 @@ rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- py
 
 - **Multi-code support** - Handle multiple shots/assets in one message
 - **Per-code notes** - Attach individual notes to each code
-- **Silent mode** - Only responds to `/note` commands (prevents flooding)
+- **Silent mode** - Only responds to `/sg` commands (prevents flooding)
 - **Unknown codes shown** - Displays codes not found in ShotGrid
 - **READ-ONLY** ShotGrid queries (shots, assets, versions)
 - **Tractor log URLs** - Automatically detects and includes Tractor links
@@ -51,13 +51,13 @@ rdo_googlebot/
 rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py
 
 # Single code
-rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "@lpare /note 306dtt_1440 check qc"
+rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "@lpare /sg 306dtt_1440 check qc"
 
 # Multiple codes with per-code notes
-rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "@lpare /note 306dtt_1000 check qc, chrNolmen rig broken"
+rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "@lpare /sg 306dtt_1000 check qc, chrNolmen rig broken"
 
 # Multiple codes with shared note
-rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "@lpare /note 306dtt_1000 518dvd_4300 both have cache issues"
+rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "@lpare /sg 306dtt_1000 518dvd_4300 both have cache issues"
 ```
 
 ### Interactive Mode (bot_interactive.py)
@@ -85,7 +85,7 @@ Querying ShotGrid...
 ============================================================
 Bot reply (posting to Space):
 ============================================================
-✅ Recorded — 2 items
+📝 Recorded — 2 items
 @lpare @john — please check:
 - 306dtt_1000 → ShotGrid (check qc)
 - chrNolmen → ShotGrid (rig broken)
@@ -132,20 +132,20 @@ rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- py
 
 ### Single Code with Note
 ```
-@lpare /note 306dtt_1000 check the qc please
+@lpare /sg 306dtt_1000 check the qc please
 ```
 **Reply:**
 ```
-✅ recorded: to lpare - Please check 306dtt_1000, check the qc please → ShotGrid
+📝 recorded: to lpare - Please check 306dtt_1000, check the qc please → ShotGrid
 ```
 
 ### Multiple Codes with Per-Code Notes (Comma-Separated)
 ```
-@lpare /note 306dtt_1000 check qc, chrNolmen rig broken, 305dtt_0200 cache issues
+@lpare /sg 306dtt_1000 check qc, chrNolmen rig broken, 305dtt_0200 cache issues
 ```
 **Reply:**
 ```
-✅ Recorded — 3 items
+📝 Recorded — 3 items
 @lpare — please check:
 - 306dtt_1000 → ShotGrid (check qc)
 - chrNolmen → ShotGrid (rig broken)
@@ -154,11 +154,11 @@ rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- py
 
 ### Multiple Codes with Shared Note (Space-Separated)
 ```
-@lpare /note 306dtt_1000 518dvd_4300 both have cache issues
+@lpare /sg 306dtt_1000 518dvd_4300 both have cache issues
 ```
 **Reply:**
 ```
-✅ Recorded — 2 items
+📝 Recorded — 2 items
 @lpare — please check:
 - 306dtt_1000 → ShotGrid
 - 518dvd_4300 → ShotGrid
@@ -167,11 +167,11 @@ Note: both have cache issues
 
 ### Multiple @mentions
 ```
-@lpare @john /note 306dtt_1000 check this, chrNolmen review rig
+@lpare @john /sg 306dtt_1000 check this, chrNolmen review rig
 ```
 **Reply:**
 ```
-✅ Recorded — 2 items
+📝 Recorded — 2 items
 @lpare @john — please check:
 - 306dtt_1000 → ShotGrid (check this)
 - chrNolmen → ShotGrid (review rig)
@@ -179,17 +179,17 @@ Note: both have cache issues
 
 ### With Tractor Log URL
 ```
-@lpare /note 306dtt_1000 failed render, see http://tractor/tv/#jid=4448933
+@lpare /sg 306dtt_1000 failed render, see http://tractor/tv/#jid=4448933
 ```
 **Reply:**
 ```
-✅ Recorded — 2 items
+📝 Recorded — 2 items
 @lpare — please check:
 - 306dtt_1000 → ShotGrid (failed render)
 - Tractor log: http://tractor/tv/#jid=4448933
 ```
 
-### Silent Mode (No /note Command)
+### Silent Mode (No /sg Command)
 ```
 test
 ```
@@ -198,7 +198,7 @@ test
 ```
 @lpare 306dtt_1000 has issues
 ```
-**Reply:** *(stays silent, requires /note command)*
+**Reply:** *(stays silent, requires /sg command)*
 
 ## ShotGrid Lookup Logic
 
@@ -258,9 +258,11 @@ Returns: found, type, id, code, status, link
 - Script name should match ShotGrid API script (e.g., `shell`)
 
 ### Bot Stays Silent
-- Message must contain `/note` command to trigger bot
+- Message must contain `/sg` command to trigger bot
 - Message must contain at least one `@mention`
 - This prevents flooding the Space with error messages
+
+**Note:** The 📝 emoji in bot replies prepares for future webapps-based ticket system integration.
 
 ### "Not found in ShotGrid"
 - Code doesn't match any Shot, Asset, or Version

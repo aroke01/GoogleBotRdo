@@ -8,7 +8,7 @@ Formats bot replies for Google Spaces with ShotGrid links and status info.
 def formatReply(taggedName, code, note, sgData, senderName=None):
     """Format bot reply for Google Space (single line, plain text).
     
-    Format: ✅ recorded: from SENDER to RECIPIENT - Please check CODE, NOTE → ShotGrid
+    Format: 📝 recorded: from SENDER to RECIPIENT - Please check CODE, NOTE → ShotGrid
     
     Args:
         taggedName: Name of @mentioned user or None
@@ -23,7 +23,7 @@ def formatReply(taggedName, code, note, sgData, senderName=None):
     if not sgData.get('found'):
         return f"❓ `{code}` — not found in ShotGrid."
     
-    parts = ["✅ recorded:"]
+    parts = ["📝 recorded:"]
     
     if senderName:
         parts.append(f"from {senderName}")
@@ -50,7 +50,7 @@ def formatReply(taggedName, code, note, sgData, senderName=None):
 def formatReplyMarkdown(taggedName, code, note, sgData, senderName=None):
     """Format bot reply with Markdown for Google Space (single line).
     
-    Format: ✅ recorded: from SENDER to RECIPIENT - Please check CODE, NOTE → ShotGrid
+    Format: 📝 recorded: from SENDER to RECIPIENT - Please check CODE, NOTE → ShotGrid
     
     Args:
         taggedName: Name of @mentioned user or None
@@ -65,7 +65,7 @@ def formatReplyMarkdown(taggedName, code, note, sgData, senderName=None):
     if not sgData.get('found'):
         return f"❓ `{code}` — not found in ShotGrid."
     
-    parts = ["✅ recorded:"]
+    parts = ["📝 recorded:"]
     
     if senderName:
         parts.append(f"from {senderName}")
@@ -118,7 +118,7 @@ def formatMultiCodeReply(taggedNames, validCodeSegments, tractorUrl, invalidCoun
         
         taggedStr = ' '.join(taggedNames) if taggedNames else ''
         
-        parts = ["✅ recorded:"]
+        parts = ["📝 recorded:"]
         if taggedStr:
             parts.append(f"to {taggedStr}")
         parts.append("-")
@@ -136,7 +136,7 @@ def formatMultiCodeReply(taggedNames, validCodeSegments, tractorUrl, invalidCoun
         return " ".join(parts)
     
     lines = []
-    lines.append(f"✅ Recorded — {totalItems} item{'s' if totalItems > 1 else ''}")
+    lines.append(f"📝 Recorded — {totalItems} item{'s' if totalItems > 1 else ''}")
     
     if taggedNames:
         mentionStr = ' '.join([f"@{name}" for name in taggedNames])

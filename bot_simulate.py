@@ -8,23 +8,23 @@ Simulates the Google Spaces bot experience. Paste a real Space message,
 the tool parses it, queries ShotGrid, and prints a formatted bot reply.
 
 Supports multiple codes with per-code notes:
-    @user /note code1 note1, code2 note2
+    @user /sg code1 note1, code2 note2
 
 Usage:
-    python bot_simulate.py "@lpare /note 306dtt_1440 check qc, 306dtt_0200 cache broken"
+    python bot_simulate.py "@lpare /sg 306dtt_1440 check qc, 306dtt_0200 cache broken"
     
     # With rez
     rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py
 
 Examples:
     # Multiple codes with per-code notes
-    python bot_simulate.py "@lpare /note 306dtt_1440 check qc, chrNolmen rig broken"
+    python bot_simulate.py "@lpare /sg 306dtt_1440 check qc, chrNolmen rig broken"
     
     # Multiple codes with shared note
-    python bot_simulate.py "@lpare /note 306dtt_1440 518dvd_4300 both have cache issues"
+    python bot_simulate.py "@lpare /sg 306dtt_1440 518dvd_4300 both have cache issues"
     
     # Single code
-    python bot_simulate.py "@lpare /note 306dtt_1440 cache is broken"
+    python bot_simulate.py "@lpare /sg 306dtt_1440 cache is broken"
     
     # Interactive mode (no args)
     python bot_simulate.py
@@ -50,7 +50,7 @@ def main():
         print("rdo_googlebot — Multi-Code Bot Simulator")
         print("=" * 60)
         print("\nPaste a Google Space message (Ctrl+D when done):")
-        print("Format: @user /note code1 note1, code2 note2")
+        print("Format: @user /sg code1 note1, code2 note2")
         print()
         
         lines = []
@@ -75,8 +75,8 @@ def main():
     parsed = parseAllCodes(rawMessage)
     
     if not parsed['hasNoteCommand']:
-        print("⚠️  No /note command found, staying silent.")
-        print("   (This prevents flooding - only /note commands trigger bot)")
+        print("⚠️  No /sg command found, staying silent.")
+        print("   (This prevents flooding - only /sg commands trigger bot)")
         sys.exit(0)
     
     if not parsed['taggedNames']:

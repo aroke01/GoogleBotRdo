@@ -66,7 +66,7 @@ def main():
             parsed = parseAllCodes(rawMessage)
             
             if not parsed['hasNoteCommand']:
-                print("⚠️  No /note command found, staying silent.")
+                print("⚠️  No /sg command found, staying silent.")
                 print("-" * 60)
                 continue
             

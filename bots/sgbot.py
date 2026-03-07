@@ -70,7 +70,7 @@ def processSgCommand(rawMessage, useMarkdown=False, showCode="lbp3", spaceId=Non
             'isConfigCommand': bool
         }
     """
-    if '/note' not in rawMessage.lower():
+    if '/sg' not in rawMessage.lower():
         return {
             'success': False,
             'reply': None,
@@ -153,8 +153,8 @@ def processSgCommandVerbose(rawMessage, useMarkdown=False, showCode="lbp3", spac
     print("Processing message...")
     print("=" * 60)
     
-    if '/note' not in rawMessage.lower():
-        print("\n⚠️  No /note command found, staying silent.")
+    if '/sg' not in rawMessage.lower():
+        print("\n⚠️  No /sg command found, staying silent.")
         return {
             'success': False,
             'reply': None,

@@ -11,11 +11,11 @@ def parseMessage(text):
     """Extract tagged user, shot/asset code, and note from Space message.
     
     Supports formats:
-    1. "@user /note CODE note text"
+    1. "@user /sg CODE note text"
     2. "hello @user shot CODE note text"
     3. "User, TIME\nCODE note text @user"
-    4. "@user /note assetName note" (asset codes like chrNolmen)
-    5. "/note show=SHOWCODE" (configuration command)
+    4. "@user /sg assetName note" (asset codes like chrNolmen)
+    5. "/sg show=SHOWCODE" (configuration command)
     
     Args:
         text: Raw message text from Google Space
@@ -25,7 +25,7 @@ def parseMessage(text):
             - taggedName: Name of @mentioned user or None
             - code: Shot/asset code or None
             - note: Remaining message text or empty string
-            - isConfigCommand: True if this is a /note show=CODE command
+            - isConfigCommand: True if this is a /sg show=CODE command
             - configShowCode: Show code from config command or None
     """
     taggedName = None
@@ -34,7 +34,7 @@ def parseMessage(text):
     isConfigCommand = False
     configShowCode = None
     
-    configMatch = re.search(r'/note\s+show=(\w+)', text, re.IGNORECASE)
+    configMatch = re.search(r'/sg\s+show=(\w+)', text, re.IGNORECASE)
     if configMatch:
         isConfigCommand = True
         configShowCode = configMatch.group(1).strip()
@@ -44,7 +44,7 @@ def parseMessage(text):
     if atMatch:
         taggedName = atMatch.group(1).strip()
     
-    commandMatch = re.search(r'/note\s+([\w._-]+)[,\s]*(.+)?', text, re.IGNORECASE)
+    commandMatch = re.search(r'/sg\s+([\w._-]+)[,\s]*(.+)?', text, re.IGNORECASE)
     if commandMatch:
         code = commandMatch.group(1).strip().rstrip(',')
         note = commandMatch.group(2).strip() if commandMatch.group(2) else ""
@@ -96,10 +96,10 @@ def parseAllCodes(text):
     """Extract all codes with per-code notes, Tractor URL, and @mentions.
     
     Supports comma-separated format for per-code notes:
-        "@user /note code1 note1, code2 note2, code3 note3"
+        "@user /sg code1 note1, code2 note2, code3 note3"
     
     Or space-separated format for shared note:
-        "@user /note code1 code2 shared note text"
+        "@user /sg code1 code2 shared note text"
     
     Args:
         text: Raw message text from Google Space
@@ -124,7 +124,7 @@ def parseAllCodes(text):
         'sharedNote': None
     }
     
-    if not re.search(r'/note\b', text, re.IGNORECASE):
+    if not re.search(r'/sg\b', text, re.IGNORECASE):
         return result
     
     result['hasNoteCommand'] = True
@@ -136,7 +136,7 @@ def parseAllCodes(text):
     if tractorMatch:
         result['tractorUrl'] = tractorMatch.group(1)
     
-    noteCommandMatch = re.search(r'/note\s+(.+)', text, re.IGNORECASE)
+    noteCommandMatch = re.search(r'/sg\s+(.+)', text, re.IGNORECASE)
     if not noteCommandMatch:
         return result
     

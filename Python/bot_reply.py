@@ -4,9 +4,9 @@
 """
 Pipeline bot reply script - Multi-code support.
 Usage: python bot_reply.py "<raw message from Space>"
-Example: python bot_reply.py "@lpare /note 306dtt_1000 check qc, chrNolmen rig broken"
+Example: python bot_reply.py "@lpare /sg 306dtt_1000 check qc, chrNolmen rig broken"
 
-Only responds to messages with /note command + @mention.
+Only responds to messages with /sg command + @mention.
 Shows unknown codes in reply instead of staying silent.
 """
 
