@@ -1,98 +1,183 @@
 # CLAUDE.md — rdo_googlebot
 
-Paste this file in your project root. Claude Code reads it automatically on startup.
+Internal Rodeo FX pipeline bot for Google Spaces.
+Queries ShotGrid and posts formatted replies.
 
 ---
 
 ## Project
-`rdo_googlebot` — Internal Rodeo FX pipeline bot for Google Spaces.
-Queries ShotGrid and posts formatted replies in Google Chat spaces.
 
-## Stack
-- Python 3.11.9
-- ShotGrid REST API (`https://rodeofx.shotgrid.autodesk.com`)
-- Google Chat outgoing webhook
-- Apps Script (interim) / Cloud Run FastAPI (target)
-- Rez for environment management
+- **Repo:** rdo_googlebot
+- **Branch:** always `main` (never master)
+- **Push:** `git push origin main` — server auto-deploys on push
 
-## Run command
+## Google Cloud
+
+- **Project:** Rdo Shotgrid Bot
+- **ID:** `pipeline-bot-488915`
+- **Number:** `420693039096`
+- **Chat API:** enabled
+- **Bot name:** sgbot
+- **Space webhook:** stored in `api.key` (gitignored)
+
+## Rez Run
+
 ```bash
-rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 requests -- python <script.py>
+rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py
 ```
 
+## Project Structure
 
-IMPORTANT: DO NOT WRITE ANYTHING to Shotgrid. 
-
-
-## Credentials
-ShotGrid credentials are in `api.key` (gitignored).
-Load via:
-```python
-from core.shotgrid import getSgToken
 ```
-Never hardcode credentials. Never commit api.key.
+rdo_googlebot/
+├── bot_simulate.py          # CLI demo — single message
+├── bot_interactive.py       # CLI demo — continuous mode
+├── bot_reply.py             # Manual webhook sender
+├── core/
+│   ├── __init__.py
+│   ├── parser.py            # Message parsing
+│   ├── shotgrid.py          # ShotGrid REST client
+│   └── formatter.py         # Reply formatting
+├── bots/
+│   ├── __init__.py
+│   └── sgbot.py             # Main bot logic
+├── Python/
+│   └── sg_auth.py           # 5-tier auth fallback
+├── api.key                  # Gitignored
+└── test_sg_access.py
+```
 
-## ShotGrid Auth
-Script-based auth. Uses `SG_SCRIPT_NAME` + `SG_SCRIPT_KEY` from `api.key`.
-REST API endpoint: `https://rodeofx.shotgrid.autodesk.com/api/v1/`
-Token endpoint: `/api/v1/auth/access_token` with `grant_type=client_credentials`
+## api.key Format
 
-## Google Space Webhook
-Outgoing webhook URL is in `api.key` as `SPACE_WEBHOOK`.
-POST JSON `{"text": "..."}` to send a message to the Space.
+```
+SG_URL=https://rodeofx.shotgrid.autodesk.com
+SG_SCRIPT_NAME=shell
+SG_SCRIPT_KEY=your_api_key_here
+SPACE_WEBHOOK=https://chat.googleapis.com/...
+```
 
-## Coding conventions
-- camelCase for functions and variables
-- Google-style docstrings
-- Absolute imports
-- Reuse existing functions, do not rewrite what exists
+Never commit `api.key`, `token.json`, or `credentials.json`.
+
+---
+
+## Coding Conventions (strict)
+
+- **camelCase** for all functions, variables, class attributes — intentional for Python
+- **Google-style docstrings** on every function and module
+- **Absolute imports** only
+- **PEP8 import order:** stdlib → third-party → local
+- **snake_case** for file and directory names
+- No type hints unless explicitly requested
 - No trailing whitespace
+- No single-character names (vars, functions, loops, classes)
+- No `getattr` or other defensive patterns
+- `try/except` must catch a specific exception — never bare
+- Smallest possible code; reuse before adding
+- One clear responsibility per function (stated in docstring)
+- When adding a module: update `__init__.py` exports
+- Before committing: `git branch` to confirm on `main`
+- If intent is unclear: ask or leave a TODO, never guess
+- Do not rename existing symbols unless explicitly instructed
+- Do not change existing behavior unless explicitly instructed
+- Bump `APP_VERSION` when changes require restart
+- Update `README.md` when commands change
 
-## Current files
-- `bot_reply.py` — sends a message to Google Space via webhook (working)
-- `bot_simulate.py` — CLI demo: paste Space message, get formatted reply (in progress)
-- `core/shotgrid.py` — ShotGrid REST client (token, search)
-- `core/parser.py` — extracts @mention, shot/asset code, note from raw message
-- `core/formatter.py` — formats bot reply string
-- `bots/sgbot.py` — main bot logic, reusable for Cloud Run
+---
 
-## Key behaviors
-- One Space = one show (lbp3). Never ask for show code.
-- Bot is READ-ONLY. Never write to ShotGrid.
-- Reply format: acknowledge + tag person + ShotGrid link
-- Show pipeline issues ONLY if detected (isOutOfDate = true)
-- Keep replies short — coords want confirmation, not pipeline details
+## ShotGrid
 
-## ShotGrid lookup logic
-1. Try shot (code contains query)
-2. Try asset (code contains query)
-3. Try version by numeric ID
-Returns: found, type, id, code, status, link
+- **READ-ONLY** — bot never writes to ShotGrid
+- Auth: 5-tier fallback in `Python/sg_auth.py`
+- Lookup order: Shot → Asset → Version (by numeric ID)
+- Returns: `found`, `type`, `id`, `code`, `status`, `sg_url`
 
-## Example Space message to parse
+---
+
+## Bot Behavior
+
+**Trigger conditions (ALL required):**
+1. Message contains `/sg`
+2. Message contains at least one `@mention`
+3. At least one valid ShotGrid code found
+
+**Silent mode:** bot ignores messages without `/sg` — prevents flooding.
+
+**Command order:** flexible — both work:
 ```
-Eileen Bocanegra, 10:41 AM
-306dtt_1440 still not seeing the MP in the bg. @Louis Pare
+@lpare /sg 306dtt_1000 check this
+/sg @lpare 306dtt_1000 check this
 ```
 
-## Expected bot reply
+**Task flag:** if message contains 📝 emoji → create Google Task (opt-in).
+Strip 📝 from note text before formatting reply.
+
+---
+
+## Supported Code Patterns
+
+| Type | Example |
+|---|---|
+| Shot | `306dtt_1440` |
+| Asset | `chrNolmen`, `prpSphere` |
+| Version | `306dtt_1980.qcani.primary.main.defPart.v13` |
+| Version ID | `ID: 4367413` or bare 7-digit number |
+| Tractor URL | `http://tractor/tv/#jid=4448933` |
+
+---
+
+## Reply Format
+
+**Single code:**
 ```
-✅ Message recorded
-
-@Louis Paré — please check 306dtt_1440
-"not seeing the MP in the bg"
-
-→ ShotGrid
-Ticket sent to CG Dashboard
+📝 recorded: to @lpare - Please check 306dtt_1000, check the qc please → ShotGrid
 ```
 
-## Current blocker
-`onMessage` trigger in Apps Script receives empty event.
-Workaround: manual `bot_reply.py` for demos.
-Fix path: Cloud Run (needs GCP billing on `pipeline-bot-488915`).
+**Multi-code:**
+```
+📝 Recorded — N items
+@lpare — please check:
+- 306dtt_1000 → ShotGrid (check qc)
+- chrNolmen → ShotGrid (rig broken)
+```
 
-## Do not
-- Do not modify `api.key`
-- Do not write to ShotGrid
-- Do not add dependencies outside the rez environment
-- Do not use async (not needed, rez Python is sync)
+**With task flag (📝 in message):**
+```
+📝 Recorded — N items
+@lpare — please check:
+- 306dtt_1000 → ShotGrid (check qc)
+📝 Task created
+```
+
+**Unknown code:**
+```
+- prpUnknown → ❓ not found in ShotGrid (note)
+```
+
+---
+
+## Google Tasks (planned)
+
+- OAuth 2.0 — `credentials.json` (Desktop app) + `token.json`
+- Task list: `sgbot`
+- Title: `Check {code} — {note}`
+- Tasks API failures: silent, never block bot reply
+- One-time setup: `python auth_setup.py`
+
+---
+
+## Deployment Phases
+
+| Phase | Status | Blocker |
+|---|---|---|
+| 1 — CLI Demo | ✅ Complete | — |
+| 2 — Apps Script | ⏸️ Blocked | Node.js/clasp approval from IT |
+| 3 — Cloud Run | ⏸️ Blocked | GCP billing on `pipeline-bot-488915` |
+
+---
+
+## Key Constraints
+
+- One Space = one show (`lbp3`) — no show code needed
+- Coordinators don't change habits — bot integrates into existing workflow
+- Webhook limitation: cannot create clickable @mentions without numeric Google user IDs
+- Replies use `@username` format (readable, no notification ping)

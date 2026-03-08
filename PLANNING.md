@@ -1,157 +1,42 @@
-# rdo_googlebot — Planning
+# PLANNING.md — rdo_googlebot
 
-## Goal
-Command-line Python tool that simulates the Google Spaces bot experience.
-A coordinator pastes a real Space message, the tool parses it, queries ShotGrid,
-and prints a formatted bot reply — exactly what sgbot will post when live.
+## Status
 
----
-
-## Accomplishments (March 2026)
-
-### ✅ Phase 1 Complete — CLI Demo Tools
-- **Command renamed:** `/note` → `/sg` for shorter syntax
-- **Reply emoji:** Changed from ✅ to 📝 (preparing for future ticket system)
-- **Flexible parsing:** Accepts both `@user /sg code` and `/sg @user code` order
-- **Multi-code support:** Handle multiple shots/assets in one message with per-code notes
-- **Interactive mode:** `bot_interactive.py` for real-time testing
-- **Simulation mode:** `bot_simulate.py` for batch testing
-- **User mentions:** Bot replies with `@username` format (webhook limitation documented)
-
-### 🔧 Technical Improvements
-- Modular architecture: `core/parser.py`, `core/formatter.py`, `core/shotgrid.py`
-- Comprehensive regex patterns for shot codes, asset codes, version IDs
-- Tractor URL detection and inclusion in replies
-- Silent mode: only responds when `/sg` command + @mention present
-- Unknown codes displayed in replies instead of staying silent
+| Phase | Status | Blocker |
+|---|---|---|
+| 1 — CLI Demo | ✅ Complete | — |
+| 2 — Apps Script | ⏸️ Blocked | Node.js/clasp from IT |
+| 3 — Cloud Run | ⏸️ Blocked | GCP billing on `pipeline-bot-488915` |
 
 ---
 
-## Current State
-- ShotGrid REST API: ✅ working (auth, shot/asset/version lookup)
-- Google Space webhook (outgoing): ✅ working
-- CLI demo tools: ✅ fully functional
-- Multi-code parsing: ✅ working
-- Flexible command order: ✅ working
-- Incoming trigger (onMessage): ⏸️ blocked — needs HTTPS or Cloud Run
-- Demo tool (bot_reply.py): ✅ enhanced and working
+## Phase 1 — CLI Demo ✅
+
+**Complete. Core modules fully functional.**
+
+- `core/parser.py` — message parsing (codes, mentions, notes, tractor URLs, 📝 flag)
+- `core/shotgrid.py` — ShotGrid REST client (Shot → Asset → Version fallback)
+- `core/formatter.py` — reply formatting (single/multi-code, per-code notes, shared notes)
+- `bots/sgbot.py` — main bot logic
+- `bot_simulate.py` — single message CLI test
+- `bot_interactive.py` — continuous mode CLI test
+- `bot_reply.py` — manual webhook sender
 
 ---
 
-## Blockers
-- **HTTPS** — Google Chat requires HTTPS to POST incoming messages to our server
-- **GCP Billing** — needed for Cloud Run (Plan A)
-- **Node.js / clasp** — needed for Apps Script CLI iteration (Plan B)
+## Phase 2 — Apps Script ⏸️
 
-IT request sent. Waiting on Plan A (GCP billing on `pipeline-bot-488915`).
+**Blocked.** `onMessage` trigger receives null event — known Google Workspace domain bug.
+Requires Node.js + clasp in rez. IT request submitted.
 
 ---
 
-## Architecture (target)
+## Phase 3 — Cloud Run ⏸️
 
-```
-User types in Space
-       ↓
-Google Chat → POST https://our-cloud-run-url/bot/sg
-       ↓
-FastAPI app (Cloud Run)
-       ↓
-ShotGrid REST API
-       ↓
-Formatted reply → Space
-```
+**Blocked.** GCP billing not enabled on `pipeline-bot-488915`.
+IT request submitted. Once approved:
 
-## Architecture (demo / interim)
-
-```
-Paste raw Space message into CLI
-       ↓
-bot_simulate.py parses message
-       ↓
-ShotGrid REST API
-       ↓
-Formatted reply printed to terminal
-       ↓
-(optional) posted to Space via webhook
-```
-
----
-
-## Demo Tool — bot_simulate.py
-
-### Input
-Raw Google Space message pasted as string. Example:
-
-```
-Eileen Bocanegra, 10:41 AM
-Hello! Got a flag in anim vfx dailies from Ara that in 306dtt_1440 we are
-still not seeing the MP in the bg it was the cg background still.
-Who do we ask to help us update the bg with the mp? @Louis Pare
-```
-
-### What it does
-1. Extracts @mention (who is being asked)
-2. Extracts shot/asset code (306dtt_1440)
-3. Queries ShotGrid for shot status + pipeline issues
-4. Formats a clean bot reply
-5. Prints reply to terminal
-6. Optionally posts to Space via webhook
-
-### Output (example)
-```
-✅ Message recorded
-
-@Louis Paré — please check 306dtt_1440
-"not seeing the MP in the bg, still showing CG background"
-
-Shot status: In Progress
-Department: Anim / VFX
-
-→ ShotGrid
-Ticket sent to CG Dashboard
-```
-
----
-
-## File Structure
-
-```
-rdo_googlebot/
-├── PLANNING.md              ← this file
-├── CLAUDE.md                ← Claude Code context
-├── bot_simulate.py          ← CLI demo tool
-├── bot_reply.py             ← existing webhook sender
-├── core/
-│   ├── shotgrid.py          ← ShotGrid REST client
-│   ├── parser.py            ← message parsing
-│   └── formatter.py         ← reply formatting
-├── bots/
-│   └── sgbot.py             ← bot logic (reusable for Cloud Run)
-├── api.key                  ← ShotGrid credentials (gitignored)
-└── requirements.txt
-```
-
----
-
-## Phases
-
-### Phase 1 — CLI Demo ✅ COMPLETE
-- [x] Refactor bot_reply.py into core/ modules
-- [x] Build bot_simulate.py — paste message, get formatted reply
-- [x] Build bot_interactive.py — real-time testing mode
-- [x] Test with real Space messages from coordinators
-- [x] Nail the reply format (📝 emoji, @mentions, multi-code support)
-- [x] Rename command from `/note` to `/sg`
-- [x] Add flexible command order parsing
-- [x] Document webhook limitations
-
-### Phase 2 — Apps Script (if clasp approved)
-- [ ] clasp push workflow
-- [ ] Claude Code iteration loop
-- [ ] Fix onMessage trigger
-
-### Phase 3 — Cloud Run (when billing approved)
-- [ ] FastAPI app wrapping Phase 1 logic
+- [ ] FastAPI wrapper around Phase 1 bot logic
 - [ ] Dockerfile
 - [ ] Deploy to Cloud Run
 - [ ] Register HTTPS endpoint in Google Cloud Console
@@ -159,27 +44,75 @@ rdo_googlebot/
 
 ---
 
-## Commands
+## Next Up (when unblocked)
 
-```bash
-# Run simulation mode (single message test)
-rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "@lpare /sg 306dtt_1440 check cache"
+### Google Tasks Integration
 
-# Run interactive mode (continuous testing)
-rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_interactive.py
+New file: `core/tasks.py`
 
-# Test with multiple codes
-rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "@lpare /sg 306dtt_1000 check qc, chrNolmen rig broken"
+```python
+getOrCreateTaskList(listName)   # find or create "sgbot" list, cache ID
+createSpaceTask(code, note, sgLink, assignee)  # create task, fail silently
+```
 
-# Both command orders work
-rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "@lpare /sg 306dtt_1440 test"
-rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "/sg @lpare 306dtt_1440 test"
+- OAuth 2.0 — `credentials.json` + `token.json` (both gitignored)
+- New file: `auth_setup.py` — one-time browser auth
+- Trigger: 📝 emoji in message → `hasTask = True`
+- Never block bot reply on Tasks failure
+- Add to `requirements.txt`: `google-auth-oauthlib`, `google-auth-httplib2`, `google-api-python-client`
+
+**Setup order:**
+1. Enable Google Tasks API in `pipeline-bot-488915`
+2. Create OAuth 2.0 Desktop app credentials → download as `credentials.json`
+3. `rez env python-3.11.9 -- python auth_setup.py`
+4. Authorize in browser → `token.json` saved
+
+---
+
+## Architecture (Target — Phase 3)
+
+```
+User types in Space
+  → Google Chat
+  → POST https://<cloud-run-url>/bot/sg
+  → FastAPI
+  → ShotGrid REST API
+  → formatted reply
+  → Space (in-thread)
+```
+
+## Architecture (Current — Phase 1)
+
+```
+Paste raw Space message
+  → bot_simulate.py CLI
+  → ShotGrid REST API
+  → formatted reply
+  → terminal + optional Space webhook
 ```
 
 ---
 
-## Notes
-- One Space = one show (lbp3). Show code never needed in command.
-- Bot replies are read-only — nothing writes to ShotGrid.
-- Reply format: acknowledge + tag person + ShotGrid link. Pipeline details only if issues detected.
-- Coords don't change habits — bot integrates into existing Space workflow.
+## Key Decisions
+
+| Decision | Choice | Reason |
+|---|---|---|
+| Command | `/sg` | Short, familiar to coords |
+| Task trigger | 📝 emoji | Natural, no new syntax |
+| Tasks | opt-in only | Prevents noise |
+| ShotGrid | READ-ONLY | No unintended side effects |
+| Silent mode | on | Prevents Space flooding |
+| @mentions | `@username` string | Webhook can't do clickable mentions |
+| One Space = one show | yes | No show code needed in command |
+
+---
+
+## Commit History (March 2026)
+
+```
+b02ba76  docs: update README and PLANNING with March 2026 accomplishments
+5a29efb  docs: update README with flexible command order and mention limitations
+fb50f1c  fix: revert to @username format and add flexible command order
+a44e443  feat: add proper Google Chat user mentions
+b4f4998  feat: rename /note to /sg and change reply emoji to 📝
+```
