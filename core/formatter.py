@@ -214,6 +214,7 @@ def formatAssetInfo(assetData, useMarkdown=True):
     code = assetData.get('code', 'unknown')
     assetType = assetData.get('type', 'Unknown')
     stage = assetData.get('stage', 'Unknown')
+    assetStatus = assetData.get('status', 'unknown')
     sgUrl = assetData.get('sg_url', '')
     publishes = assetData.get('publishes', {})
 
@@ -242,6 +243,51 @@ def formatAssetInfo(assetData, useMarkdown=True):
         statusPadded = status.ljust(4)
 
         lines.append(f"{deptPadded}  {versionStr:>4}  {statusPadded} {emoji}")
+
+    lines.append("")
+
+    warnings = []
+    approvals = []
+    pushed = []
+
+    for dept, pubInfo in publishes.items():
+        status = pubInfo.get('status', 'unknown')
+        if status in ['apr', 'cmpt']:
+            approvals.append(deptDisplayNames[dept])
+        elif status == 'psh':
+            pushed.append(deptDisplayNames[dept])
+
+    if 'model' in publishes and 'rig' in publishes:
+        modelVer = publishes['model'].get('version', 0)
+        rigVer = publishes['rig'].get('version', 0)
+        if modelVer > rigVer:
+            warnings.append(f"⚠️ Model v{modelVer} is newer than Rig v{rigVer}")
+
+    if 'texture' in publishes and 'shading' in publishes:
+        texVer = publishes['texture'].get('version', 0)
+        shdVer = publishes['shading'].get('version', 0)
+        if texVer > shdVer:
+            warnings.append(f"⚠️ Texture v{texVer} is newer than Shading v{shdVer}")
+
+    if assetStatus == 'apr':
+        lines.append("✅ Asset Review: Approved")
+    elif assetStatus == 'ip':
+        lines.append("🔄 Asset Review: In Progress")
+    elif assetStatus == 'new':
+        lines.append("⬜ Asset Review: New")
+    elif assetStatus == 'rev':
+        lines.append("👁️ Asset Review: In Review")
+
+    if approvals:
+        lines.append(f"✅ Approved: {', '.join(approvals)}")
+
+    if pushed:
+        lines.append(f"📤 Pushed: {', '.join(pushed)}")
+
+    if warnings:
+        lines.append("")
+        for warning in warnings:
+            lines.append(warning)
 
     lines.append("")
 
