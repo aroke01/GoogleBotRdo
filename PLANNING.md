@@ -7,11 +7,34 @@ and prints a formatted bot reply — exactly what sgbot will post when live.
 
 ---
 
+## Accomplishments (March 2026)
+
+### ✅ Phase 1 Complete — CLI Demo Tools
+- **Command renamed:** `/note` → `/sg` for shorter syntax
+- **Reply emoji:** Changed from ✅ to 📝 (preparing for future ticket system)
+- **Flexible parsing:** Accepts both `@user /sg code` and `/sg @user code` order
+- **Multi-code support:** Handle multiple shots/assets in one message with per-code notes
+- **Interactive mode:** `bot_interactive.py` for real-time testing
+- **Simulation mode:** `bot_simulate.py` for batch testing
+- **User mentions:** Bot replies with `@username` format (webhook limitation documented)
+
+### 🔧 Technical Improvements
+- Modular architecture: `core/parser.py`, `core/formatter.py`, `core/shotgrid.py`
+- Comprehensive regex patterns for shot codes, asset codes, version IDs
+- Tractor URL detection and inclusion in replies
+- Silent mode: only responds when `/sg` command + @mention present
+- Unknown codes displayed in replies instead of staying silent
+
+---
+
 ## Current State
-- ShotGrid REST API: working (auth, shot/asset/version lookup)
-- Google Space webhook (outgoing): working
-- Incoming trigger (onMessage): blocked — needs HTTPS or Cloud Run
-- Demo tool (bot_reply.py): working but basic
+- ShotGrid REST API: ✅ working (auth, shot/asset/version lookup)
+- Google Space webhook (outgoing): ✅ working
+- CLI demo tools: ✅ fully functional
+- Multi-code parsing: ✅ working
+- Flexible command order: ✅ working
+- Incoming trigger (onMessage): ⏸️ blocked — needs HTTPS or Cloud Run
+- Demo tool (bot_reply.py): ✅ enhanced and working
 
 ---
 
@@ -112,11 +135,15 @@ rdo_googlebot/
 
 ## Phases
 
-### Phase 1 — CLI Demo (now, no IT needed)
-- [ ] Refactor bot_reply.py into core/ modules
-- [ ] Build bot_simulate.py — paste message, get formatted reply
-- [ ] Test with real Space messages from coordinators
-- [ ] Nail the reply format
+### Phase 1 — CLI Demo ✅ COMPLETE
+- [x] Refactor bot_reply.py into core/ modules
+- [x] Build bot_simulate.py — paste message, get formatted reply
+- [x] Build bot_interactive.py — real-time testing mode
+- [x] Test with real Space messages from coordinators
+- [x] Nail the reply format (📝 emoji, @mentions, multi-code support)
+- [x] Rename command from `/note` to `/sg`
+- [x] Add flexible command order parsing
+- [x] Document webhook limitations
 
 ### Phase 2 — Apps Script (if clasp approved)
 - [ ] clasp push workflow
@@ -135,14 +162,18 @@ rdo_googlebot/
 ## Commands
 
 ```bash
-# Run with rez
-rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 requests -- python bot_simulate.py
+# Run simulation mode (single message test)
+rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "@lpare /sg 306dtt_1440 check cache"
 
-# Test with a real message
-python bot_simulate.py "Eileen Bocanegra 10:41 AM: 306dtt_1440 still not seeing the MP @Louis Pare"
+# Run interactive mode (continuous testing)
+rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_interactive.py
 
-# Post to Space
-python bot_reply.py "@Louis Paré /sg 306dtt_1440 not seeing MP in bg"
+# Test with multiple codes
+rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "@lpare /sg 306dtt_1000 check qc, chrNolmen rig broken"
+
+# Both command orders work
+rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "@lpare /sg 306dtt_1440 test"
+rez env python-3.11.9 shotgun_api3-3.3.4-rdo-1.0.0 rdo_shotgun_core-1.10.1 -- python bot_simulate.py "/sg @lpare 306dtt_1440 test"
 ```
 
 ---

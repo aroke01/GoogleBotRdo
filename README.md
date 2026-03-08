@@ -2,6 +2,13 @@
 
 Internal Rodeo FX pipeline bot for Google Spaces. Queries ShotGrid and posts formatted replies with **multi-code support**.
 
+## Recent Updates (March 2026)
+
+- ✅ **Command renamed:** `/note` → `/sg` for shorter, clearer syntax
+- ✅ **Reply emoji changed:** ✅ → 📝 (preparing for future ticket system integration)
+- ✅ **Flexible command order:** Both `@user /sg code` and `/sg @user code` work
+- ✅ **User mentions:** Bot uses `@username` format in replies (webhook limitation prevents clickable mentions)
+
 ## Quick Start
 
 ```bash
