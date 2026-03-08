@@ -94,16 +94,19 @@ def extractShotCode(text):
 
 def parseAllCodes(text):
     """Extract all codes with per-code notes, Tractor URL, and @mentions.
-    
+
     Supports comma-separated format for per-code notes:
         "@user /sg code1 note1, code2 note2, code3 note3"
-    
+
     Or space-separated format for shared note:
         "@user /sg code1 code2 shared note text"
-    
+
+    Or info subcommand:
+        "/sg info chrNolmen" or "@user /sg info chrNolmen"
+
     Args:
         text: Raw message text from Google Space
-        
+
     Returns:
         dict: {
             'hasNoteCommand': bool,
@@ -113,7 +116,9 @@ def parseAllCodes(text):
                 ...
             ],
             'tractorUrl': str or None,
-            'sharedNote': str or None
+            'sharedNote': str or None,
+            'subcommand': str or None ('info'),
+            'subcommandCode': str or None
         }
     """
     result = {
@@ -121,13 +126,23 @@ def parseAllCodes(text):
         'taggedNames': [],
         'codeSegments': [],
         'tractorUrl': None,
-        'sharedNote': None
+        'sharedNote': None,
+        'subcommand': None,
+        'subcommandCode': None
     }
-    
+
     if not re.search(r'/sg\b', text, re.IGNORECASE):
         return result
-    
+
     result['hasNoteCommand'] = True
+
+    infoMatch = re.search(r'/sg\s+info\s+(\S+)', text, re.IGNORECASE)
+    if infoMatch:
+        result['subcommand'] = 'info'
+        result['subcommandCode'] = infoMatch.group(1).strip()
+        allMentions = re.findall(r'@([\w\-À-ÿ]+)', text, re.IGNORECASE)
+        result['taggedNames'] = [m.strip() for m in allMentions]
+        return result
     
     allMentions = re.findall(r'@([\w\-À-ÿ]+)', text, re.IGNORECASE)
     result['taggedNames'] = [m.strip() for m in allMentions]

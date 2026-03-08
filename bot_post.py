@@ -30,8 +30,8 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from core.parser import parseAllCodes
-from core.shotgrid import lookupEntity
-from core.formatter import formatMultiCodeReply
+from core.shotgrid import lookupEntity, getAssetInfo
+from core.formatter import formatMultiCodeReply, formatAssetInfo
 from core.webhook import postToSpace
 from core.config import getSpaceIdFromApiKey, getShowFromSpaceId
 
@@ -69,6 +69,37 @@ def main():
     if not parsed['hasNoteCommand']:
         print("⚠️  No /sg command found, staying silent.")
         sys.exit(0)
+
+    if parsed['subcommand'] == 'info':
+        assetCode = parsed['subcommandCode']
+        if not assetCode:
+            print("⚠️  No asset code provided for info subcommand.")
+            sys.exit(0)
+
+        print(f"Info subcommand detected for asset: {assetCode}")
+        print()
+
+        assetData = getAssetInfo(assetCode, showCode)
+
+        reply = formatAssetInfo(assetData, useMarkdown=True)
+
+        print("=" * 60)
+        print("Bot reply (posting to Space):")
+        print("=" * 60)
+        print(reply)
+        print("=" * 60)
+        print()
+
+        try:
+            response = postToSpace(reply)
+            print(f"✓ Posted to Space (HTTP {response.status_code})")
+            if spaceId:
+                print(f"  Space: {spaceId}")
+                print(f"  URL: https://mail.google.com/mail/u/0/#chat/space/{spaceId}")
+            sys.exit(0)
+        except Exception as exc:
+            print(f"✗ Failed to post to Space: {exc}")
+            sys.exit(1)
 
     if not parsed['taggedNames']:
         print("⚠️  No @mention found, staying silent.")

@@ -17,8 +17,8 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from core.parser import parseAllCodes
-from core.shotgrid import lookupEntity
-from core.formatter import formatMultiCodeReply
+from core.shotgrid import lookupEntity, getAssetInfo
+from core.formatter import formatMultiCodeReply, formatAssetInfo
 from core.webhook import postToSpace
 from core.config import getSpaceIdFromApiKey, getShowFromSpaceId
 
@@ -64,17 +64,43 @@ def main():
                 currentShowCode = "lbp3"
             
             parsed = parseAllCodes(rawMessage)
-            
+
             if not parsed['hasNoteCommand']:
                 print("⚠️  No /sg command found, staying silent.")
                 print("-" * 60)
                 continue
-            
+
+            if parsed['subcommand'] == 'info':
+                assetCode = parsed['subcommandCode']
+                if not assetCode:
+                    print("⚠️  No asset code provided for info subcommand.")
+                    print("-" * 60)
+                    continue
+
+                print(f"Info subcommand detected for asset: {assetCode}")
+                print()
+
+                assetData = getAssetInfo(assetCode, currentShowCode)
+
+                reply = formatAssetInfo(assetData, useMarkdown=True)
+
+                print("Reply:")
+                print(reply)
+                print("-" * 60)
+
+                try:
+                    response = postToSpace(reply)
+                    print(f"✓ Posted to Space (HTTP {response.status_code})")
+                except Exception as exc:
+                    print(f"✗ Failed to post: {exc}")
+
+                continue
+
             if not parsed['taggedNames']:
                 print("⚠️  No @mention found, staying silent.")
                 print("-" * 60)
                 continue
-            
+
             if not parsed['codeSegments']:
                 print("⚠️  No codes found, staying silent.")
                 print("-" * 60)

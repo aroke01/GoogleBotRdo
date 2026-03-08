@@ -91,7 +91,7 @@ def formatReplyMarkdown(taggedName, code, note, sgData, senderName=None):
 
 def formatMultiCodeReply(taggedNames, validCodeSegments, tractorUrl, invalidCount, sharedNote, useMarkdown=True):
     """Format reply for multiple codes with per-code notes.
-    
+
     Args:
         taggedNames: List of @mentioned users
         validCodeSegments: List of dicts with 'code', 'note', 'sgLink'
@@ -99,25 +99,25 @@ def formatMultiCodeReply(taggedNames, validCodeSegments, tractorUrl, invalidCoun
         invalidCount: Number of codes not found in SG
         sharedNote: Shared note text (if no per-code notes)
         useMarkdown: Use Markdown formatting (default: True)
-        
+
     Returns:
         str: Formatted reply (single or multi-line)
     """
     totalItems = len(validCodeSegments)
     if tractorUrl:
         totalItems += 1
-    
+
     if totalItems == 0:
         return "❓ No valid codes found in ShotGrid."
-    
+
     if totalItems == 1 and not tractorUrl and invalidCount == 0:
         segment = validCodeSegments[0]
         code = segment['code']
         note = segment.get('note', '') or sharedNote or ''
         sgLink = segment.get('sgLink')
-        
+
         taggedStr = ' '.join([f"@{name}" for name in taggedNames]) if taggedNames else ''
-        
+
         parts = ["📝 recorded:"]
         if taggedStr:
             parts.append(f"to {taggedStr}")
@@ -125,52 +125,122 @@ def formatMultiCodeReply(taggedNames, validCodeSegments, tractorUrl, invalidCoun
         parts.append(f"Please check {code}")
         if note:
             parts.append(f", {note}")
-        
+
         if useMarkdown and sgLink:
             parts.append(f"<{sgLink}|→ ShotGrid>")
         elif sgLink:
             parts.append(f"→ ShotGrid: {sgLink}")
         else:
             parts.append("→ ShotGrid")
-        
+
         return " ".join(parts)
-    
+
     lines = []
     lines.append(f"📝 Recorded — {totalItems} item{'s' if totalItems > 1 else ''}")
-    
+
     if taggedNames:
         mentionStr = ' '.join([f"@{name}" for name in taggedNames])
         lines.append(f"{mentionStr} — please check:")
     else:
         lines.append("Please check:")
-    
+
     for segment in validCodeSegments:
         code = segment['code']
         note = segment.get('note', '')
         sgLink = segment.get('sgLink')
-        
+
         if useMarkdown and sgLink:
             linkPart = f"<{sgLink}|→ ShotGrid>"
         elif sgLink:
             linkPart = f"→ ShotGrid: {sgLink}"
         else:
             linkPart = "→ ShotGrid"
-        
+
         if note:
             lines.append(f"- {code} {linkPart} ({note})")
         else:
             lines.append(f"- {code} {linkPart}")
-    
+
     if tractorUrl:
         if useMarkdown:
             lines.append(f"- <{tractorUrl}|Tractor log: {tractorUrl}>")
         else:
             lines.append(f"- Tractor log: {tractorUrl}")
-    
+
     if invalidCount > 0:
         lines.append(f"⚠️ {invalidCount} code{'s' if invalidCount > 1 else ''} not found in ShotGrid")
-    
+
     if sharedNote:
         lines.append(f"Note: {sharedNote}")
-    
+
+    return "\n".join(lines)
+
+
+def formatAssetInfo(assetData, useMarkdown=True):
+    """Format asset info reply with task breakdown by department.
+
+    Args:
+        assetData: Dictionary from getAssetInfo() with asset and task data
+        useMarkdown: Use Markdown formatting for ShotGrid link (default: True)
+
+    Returns:
+        str: Formatted multi-line reply with dept status and assignees
+    """
+    if not assetData.get('found'):
+        code = assetData.get('code', 'unknown')
+        return f"❓ {code} — not found in ShotGrid"
+
+    statusEmojiMap = {
+        'ip': '🔄',
+        'new': '⬜',
+        'lck': '🔒',
+        'psh': '📤',
+        'apr': '✅',
+        'cmpt': '✅',
+        'omt': '➖',
+        'void': '🚫',
+        'del': '🗑️',
+        'rev': '👁️'
+    }
+
+    code = assetData.get('code', 'unknown')
+    assetType = assetData.get('type', 'Unknown')
+    stage = assetData.get('stage', 'Unknown')
+    sgUrl = assetData.get('sg_url', '')
+    tasks = assetData.get('tasks', {})
+
+    lines = []
+    lines.append(f"📋 {code} — {assetType} · {stage}")
+    lines.append("")
+
+    deptOrder = ['Modeling', 'Texturing', 'Shading', 'Rigging']
+
+    maxDeptLen = max(len(dept) for dept in deptOrder if dept in tasks) if tasks else 10
+
+    for dept in deptOrder:
+        if dept not in tasks:
+            continue
+
+        taskInfo = tasks[dept]
+        status = taskInfo.get('status', 'unknown')
+        assignees = taskInfo.get('assignees', [])
+
+        emoji = statusEmojiMap.get(status, '❓')
+
+        assigneeStr = ', '.join(assignees) if assignees else '—'
+
+        deptPadded = dept.ljust(maxDeptLen)
+        statusPadded = status.ljust(4)
+
+        lines.append(f"{deptPadded}  {statusPadded} {emoji}  {assigneeStr}")
+
+    lines.append("")
+
+    if useMarkdown and sgUrl:
+        lines.append(f"<{sgUrl}|🔗 ShotGrid>")
+    elif sgUrl:
+        lines.append(f"🔗 ShotGrid: {sgUrl}")
+    else:
+        lines.append("🔗 ShotGrid")
+
     return "\n".join(lines)
