@@ -177,14 +177,14 @@ def formatMultiCodeReply(taggedNames, validCodeSegments, tractorUrl, invalidCoun
 
 
 def formatAssetInfo(assetData, useMarkdown=True):
-    """Format asset info reply with task breakdown by department.
+    """Format asset info reply with publish breakdown by department.
 
     Args:
-        assetData: Dictionary from getAssetInfo() with asset and task data
+        assetData: Dictionary from getAssetInfo() with asset and publish data
         useMarkdown: Use Markdown formatting for ShotGrid link (default: True)
 
     Returns:
-        str: Formatted multi-line reply with dept status and assignees
+        str: Formatted multi-line reply with dept version and status
     """
     if not assetData.get('found'):
         code = assetData.get('code', 'unknown')
@@ -203,36 +203,45 @@ def formatAssetInfo(assetData, useMarkdown=True):
         'rev': '👁️'
     }
 
+    deptDisplayNames = {
+        'model': 'Model',
+        'texture': 'Texture',
+        'shading': 'Shading',
+        'rig': 'Rig',
+        'groom': 'Groom'
+    }
+
     code = assetData.get('code', 'unknown')
     assetType = assetData.get('type', 'Unknown')
     stage = assetData.get('stage', 'Unknown')
     sgUrl = assetData.get('sg_url', '')
-    tasks = assetData.get('tasks', {})
+    publishes = assetData.get('publishes', {})
 
     lines = []
     lines.append(f"📋 {code} — {assetType} · {stage}")
     lines.append("")
 
-    deptOrder = ['Modeling', 'Texturing', 'Shading', 'Rigging']
+    deptOrder = ['model', 'texture', 'shading', 'rig', 'groom']
 
-    maxDeptLen = max(len(dept) for dept in deptOrder if dept in tasks) if tasks else 10
+    displayedDepts = [deptDisplayNames[d] for d in deptOrder if d in publishes]
+    maxDeptLen = max(len(d) for d in displayedDepts) if displayedDepts else 8
 
     for dept in deptOrder:
-        if dept not in tasks:
+        if dept not in publishes:
             continue
 
-        taskInfo = tasks[dept]
-        status = taskInfo.get('status', 'unknown')
-        assignees = taskInfo.get('assignees', [])
+        pubInfo = publishes[dept]
+        version = pubInfo.get('version', 0)
+        status = pubInfo.get('status', 'unknown')
 
         emoji = statusEmojiMap.get(status, '❓')
 
-        assigneeStr = ', '.join(assignees) if assignees else '—'
-
-        deptPadded = dept.ljust(maxDeptLen)
+        displayName = deptDisplayNames[dept]
+        deptPadded = displayName.ljust(maxDeptLen)
+        versionStr = f"v{version}"
         statusPadded = status.ljust(4)
 
-        lines.append(f"{deptPadded}  {statusPadded} {emoji}  {assigneeStr}")
+        lines.append(f"{deptPadded}  {versionStr:>4}  {statusPadded} {emoji}")
 
     lines.append("")
 

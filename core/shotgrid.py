@@ -10,6 +10,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), 'Python'))
 
 from Python.sg_auth import getShotgridConnection
+from Python.asset_resolver import resolveLatestPerDept
 
 
 def getSgToken():
@@ -112,10 +113,10 @@ def lookupEntity(code, showCode="lbp3"):
 
 
 def getAssetInfo(assetCode, showCode="lbp3"):
-    """Get detailed asset information including task breakdown by department.
+    """Get detailed asset information including publish breakdown by department.
 
-    Queries asset entity and associated tasks for pipeline departments.
-    Returns status and assignees per department (Modeling, Texturing, Shading, Rigging).
+    Queries asset entity and latest publishes per department.
+    Uses asset_resolver.py for fault-tolerant publish classification.
 
     Args:
         assetCode: Asset code (e.g., "chrNolmen")
@@ -128,12 +129,13 @@ def getAssetInfo(assetCode, showCode="lbp3"):
             'type': str (asset type),
             'status': str (asset status),
             'stage': str (asset stage),
-            'sg_url': str (ShotGrid page URL),
-            'tasks': {
-                'Modeling': {'status': str, 'assignees': [str, ...]},
-                'Texturing': {...},
-                'Shading': {...},
-                'Rigging': {...}
+            'sg_url': str (ShotGrid detail URL),
+            'publishes': {
+                'model': {'version': int, 'status': str, 'publish_id': int},
+                'texture': {...},
+                'shading': {...},
+                'rig': {...},
+                'groom': {...}
             }
         }
 
@@ -155,70 +157,20 @@ def getAssetInfo(assetCode, showCode="lbp3"):
         assetType = assetResult.get('sg_asset_type') or 'Unknown'
         assetStatus = assetResult.get('sg_status_list') or 'unknown'
         assetStage = assetResult.get('sg_stage') or 'Unknown'
-        sgUrl = f"https://rodeofx.shotgrid.autodesk.com/page/{assetId}"
+        sgUrl = f"https://rodeofx.shotgrid.autodesk.com/detail/Asset/{assetId}"
 
-        taskFilters = [
-            ['entity', 'is', {'type': 'Asset', 'id': assetId}],
-            ['step.Step.code', 'ends_with', '(A)']
-        ]
+        deptResults = resolveLatestPerDept(sg, assetId)
 
-        taskFields = [
-            'content',
-            'sg_status_list',
-            'task_assignees',
-            'step',
-            'updated_at'
-        ]
+        publishesSummary = {}
 
-        tasks = sg.find('Task', taskFilters, taskFields)
-
-        deptSteps = {
-            'Modeling (A)': 'Modeling',
-            'Texturing (A)': 'Texturing',
-            'Shading (A)': 'Shading',
-            'Rigging (A)': 'Rigging'
-        }
-
-        latestTasksByDept = {}
-
-        for task in tasks:
-            step = task.get('step')
-            if not step:
-                continue
-
-            stepName = step.get('name') if isinstance(step, dict) else str(step)
-
-            if stepName not in deptSteps:
-                continue
-
-            deptName = deptSteps[stepName]
-            updatedAt = task.get('updated_at')
-
-            if deptName not in latestTasksByDept:
-                latestTasksByDept[deptName] = task
-            else:
-                currentUpdatedAt = latestTasksByDept[deptName].get('updated_at')
-                if updatedAt and currentUpdatedAt and updatedAt > currentUpdatedAt:
-                    latestTasksByDept[deptName] = task
-
-        tasksSummary = {}
-
-        for deptName, task in latestTasksByDept.items():
-            taskStatus = task.get('sg_status_list') or 'unknown'
-
-            assignees = task.get('task_assignees') or []
-            assigneeNames = []
-
-            for assignee in assignees:
-                if isinstance(assignee, dict):
-                    name = assignee.get('name', '')
-                    if name:
-                        assigneeNames.append(name)
-
-            tasksSummary[deptName] = {
-                'status': taskStatus,
-                'assignees': assigneeNames
-            }
+        for dept, deptInfo in deptResults.items():
+            if deptInfo.get('dept_status') == 'available':
+                pub = deptInfo.get('publish')
+                publishesSummary[dept] = {
+                    'version': deptInfo.get('version', 0),
+                    'status': pub.get('sg_status_list') if pub else 'unknown',
+                    'publish_id': deptInfo.get('publish_id', -1)
+                }
 
         return {
             'found': True,
@@ -227,7 +179,7 @@ def getAssetInfo(assetCode, showCode="lbp3"):
             'status': assetStatus,
             'stage': assetStage,
             'sg_url': sgUrl,
-            'tasks': tasksSummary
+            'publishes': publishesSummary
         }
 
     except Exception as exc:
