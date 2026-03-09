@@ -14,38 +14,62 @@
 
 ## Current Sprint — Google Tasks Integration
 
+**Status:** ✅ Complete (March 2026)
+
 Goal: when 📝 emoji is in message, create a task in the sender's
 Google Tasks app. Fail silently — never block the bot reply.
 
 ### Tasks
 
-- [ ] Enable Google Tasks API in GCP project `pipeline-bot-488915`
-- [ ] Create OAuth 2.0 Desktop app credentials in Cloud Console
+- [x] Enable Google Tasks API in GCP project `pipeline-bot-488915`
+- [x] Create OAuth 2.0 Desktop app credentials in Cloud Console
       → download as `credentials.json` to project root
-- [ ] Run `python auth_setup.py` once to authorize → saves `token.json`
-- [ ] NEW FILE: `core/tasks.py`
-      - `getOrCreateTaskList(service, listName="sgbot")` 
+- [x] Run `python auth_setup.py` once to authorize → saves `token.json`
+- [x] NEW FILE: `core/tasks.py`
+      - `getOrCreateTaskList(service, listName="sgbot")`
       - `createTask(service, code, note, sgUrl, assignee)`
-      - `buildTasksService(tokenPath, credPath)` 
-- [ ] NEW FILE: `auth_setup.py` — one-time OAuth browser flow
-- [ ] UPDATE: `bots/sgbot.py` — if `hasTask=True` call `createTask()`
-- [ ] UPDATE: `core/parser.py` — set `hasTask = "📝" in message`
-- [ ] UPDATE: `.gitignore` — add `token.json`, `credentials.json`
-- [ ] UPDATE: `requirements.txt` — add `google-auth-oauthlib`,
+      - `buildTasksService(tokenPath, credPath)`
+      - `createTaskFromMessage()` — main entry point
+- [x] NEW FILE: `auth_setup.py` — one-time OAuth browser flow
+- [x] UPDATE: `bot_simulate.py` — if `hasTask=True` call `createTaskFromMessage()`
+- [x] UPDATE: `core/parser.py` — set `hasTask = "📝" in message`, strip emoji from text
+- [x] UPDATE: `.gitignore` — add `token.json`, `credentials.json`
+- [x] UPDATE: `requirements.txt` — add `google-auth-oauthlib`,
       `google-auth-httplib2`, `google-api-python-client`
-- [ ] TEST: send message with 📝 → verify task appears in Google Tasks
+- [x] TEST: send message with 📝 → verify task appears in Google Tasks
 
 ### Task format
 
-Title: `Check {code} — {note}`
+Title: `Check {code} — {note}` (📝 emoji stripped)
 Notes: `{sgUrl}\nFrom: {assignee}`
 Due:   today
-List:  `sgbot`
+List:  `sgbot` (auto-created)
 
-### Done when
+### Implementation
 
-Send `/sg prpNolmenStaff check shading 📝` via `bot_simulate.py`
-→ task appears in Google Tasks under `sgbot` list.
+```bash
+# Setup (one-time):
+1. Enable Google Tasks API in GCP console
+2. Create OAuth 2.0 Desktop credentials → credentials.json
+3. rez env python-3.11.9 -- python auth_setup.py
+4. Authorize in browser → token.json saved
+
+# Usage:
+@lpare /sg prpNolmenStaff check shading 📝
+  → Bot posts reply to Space
+  → Creates task: "Check prpNolmenStaff — check shading"
+  → Task appears in Google Tasks under "sgbot" list
+```
+
+### Verified ✓
+
+Tested: `@lpare /sg prpNolmenStaff check shading 📝`
+- ✅ Task created in Google Tasks
+- ✅ Task title: "Check prpNolmenStaff — check shading"
+- ✅ Due date: Today
+- ✅ List: "sgbot" (auto-created)
+- ✅ Fails gracefully if not authenticated
+- ✅ Never blocks bot reply
 
 
 
@@ -72,6 +96,7 @@ Send `/sg prpNolmenStaff check shading 📝` via `bot_simulate.py`
 - ✅ Asset review status display
 - ✅ `/sg dep|deps|dependency|dependencies <code>` subcommand - daily dependency tree (version ID, version code, or shot code)
 - ✅ `/sg help|--help|-h` command - lists all available commands with examples
+- ✅ Google Tasks integration with 📝 emoji trigger - auto-creates tasks in "sgbot" list
 
 ---
 
