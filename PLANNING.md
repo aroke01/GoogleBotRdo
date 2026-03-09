@@ -31,6 +31,7 @@
 - ✅ Approval/Push summaries
 - ✅ Asset review status display
 - ✅ `/sg dep|deps|dependency|dependencies <code>` subcommand - daily dependency tree (version ID, version code, or shot code)
+- ✅ `/sg help|--help|-h` command - lists all available commands with examples
 
 ---
 
