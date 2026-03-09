@@ -105,7 +105,8 @@ def parseAllCodes(text):
         "/sg info chrNolmen" or "@user /sg info chrNolmen"
 
     Or deps subcommand:
-        "/sg deps 306dtt_1440" or "/sg deps 1234567" or "/sg deps versionCode"
+        "/sg dep 306dtt_1440" or "/sg deps 1234567" or "/sg dependency versionCode"
+        "/sg dependencies 306dtt_1440" (all variations accepted)
 
     Args:
         text: Raw message text from Google Space
@@ -147,7 +148,7 @@ def parseAllCodes(text):
         result['taggedNames'] = [m.strip() for m in allMentions]
         return result
 
-    depsMatch = re.search(r'/sg\s+deps\s+(\S+)', text, re.IGNORECASE)
+    depsMatch = re.search(r'/sg\s+(?:dep|deps|dependency|dependencies)\s+(\S+)', text, re.IGNORECASE)
     if depsMatch:
         result['subcommand'] = 'deps'
         result['subcommandCode'] = depsMatch.group(1).strip()
