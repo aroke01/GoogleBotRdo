@@ -30,7 +30,7 @@
 - ✅ Version mismatch warnings (Model vs Rig, Texture vs Shading)
 - ✅ Approval/Push summaries
 - ✅ Asset review status display
-- ✅ `/sg deps <code>` subcommand - daily dependency tree (version ID, version code, or shot code)
+- ✅ `/sg dep|deps|dependency|dependencies <code>` subcommand - daily dependency tree (version ID, version code, or shot code)
 
 ---
 
@@ -77,9 +77,16 @@ Add `/sg deps <code>` subcommand to list daily dependencies through the chatbot.
 - [x] Test with real production data
 
 ### Implementation
-- `/sg deps 4510266` (version ID)
-- `/sg deps 313lhb_2840.qcani.primary.main.defPart.v1` (version code)
-- `/sg deps 313lhb_2840` (shot code - finds latest version)
+Command variations (all accepted):
+- `/sg dep <code>` - short form
+- `/sg deps <code>` - short plural
+- `/sg dependency <code>` - full word
+- `/sg dependencies <code>` - full word plural
+
+Input types:
+- `/sg dep 4510266` (version ID)
+- `/sg dep 313lhb_2840.qcani.primary.main.defPart.v1` (version code)
+- `/sg dep 313lhb_2840` (shot code - finds latest version)
 
 ### Output Format
 ```
