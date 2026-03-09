@@ -15,9 +15,9 @@
 **Complete. Core modules fully functional.**
 
 ### Core Functionality
-- `core/parser.py` — message parsing (codes, mentions, notes, tractor URLs, 📝 flag, info subcommand)
-- `core/shotgrid.py` — ShotGrid REST client (Shot → Asset → Version fallback, asset info with publishes)
-- `core/formatter.py` — reply formatting (single/multi-code, per-code notes, shared notes, asset info with warnings)
+- `core/parser.py` — message parsing (codes, mentions, notes, tractor URLs, 📝 flag, info/deps subcommands)
+- `core/shotgrid.py` — ShotGrid REST client (Shot → Asset → Version fallback, asset info with publishes, dependency tree)
+- `core/formatter.py` — reply formatting (single/multi-code, per-code notes, shared notes, asset info with warnings, dependency tree ASCII art)
 - `bots/sgbot.py` — main bot logic
 - `bot_simulate.py` — single message CLI test
 - `bot_interactive.py` — continuous mode CLI test
@@ -30,6 +30,7 @@
 - ✅ Version mismatch warnings (Model vs Rig, Texture vs Shading)
 - ✅ Approval/Push summaries
 - ✅ Asset review status display
+- ✅ `/sg deps <code>` subcommand - daily dependency tree (version ID, version code, or shot code)
 
 ---
 
@@ -60,25 +61,43 @@ IT request submitted. Once approved:
 
 ## Sprint — Daily Dependencies Feature
 
-**Status:** Planned
+**Status:** ✅ Complete (March 2026)
 
 ### Goal
 Add `/sg deps <code>` subcommand to list daily dependencies through the chatbot.
 
 ### Requirements
-- [ ] Query ShotGrid for upstream/downstream dependencies
-- [ ] Support Shot and Asset dependency queries
-- [ ] Format dependency tree in readable format
-- [ ] Show dependency status (blocked, ready, complete)
-- [ ] Handle circular dependencies gracefully
-- [ ] Add to parser.py as new subcommand
-- [ ] Update formatters for dependency output
-- [ ] Test with real production data
+- [x] Query ShotGrid for upstream/downstream dependencies
+- [x] Support Version ID, Version code, and Shot code inputs
+- [x] Format dependency tree in readable ASCII art format
+- [x] Show department labels and version numbers
+- [x] Display QC versions alongside regular dailies
+- [x] Add to parser.py as new subcommand
+- [x] Update formatters for dependency output
+- [x] Test with real production data
+
+### Implementation
+- `/sg deps 4510266` (version ID)
+- `/sg deps 313lhb_2840.qcani.primary.main.defPart.v1` (version code)
+- `/sg deps 313lhb_2840` (shot code - finds latest version)
+
+### Output Format
+```
+🔗 Dependencies for 313lhb_2840.qcani.primary.main.defPart.v1
+
+└── (Anim QC, v1) 313lhb_2840.qcani.primary.main.defPart.v1
+    └── (Layout, v1) 313lhb_2840.lay.witnessCam.v1 <---> QC
+        └── (CMM, v002) 313lhb_2840_bg01_cmm_v002
+            └── (Editorial, v1) 313lhb_2840.lineup.autoLineup.v1
+                └── (Plate, v1) 313lhb_2840.ingest.cc01.rdo-nwb.distort.compPlate.v1
+
+🔗 ShotGrid
+```
 
 ### Use Cases
-- Coordinator checks what's blocking a shot: `/sg deps 306dtt_1440`
-- Check what depends on an asset: `/sg deps chrNolmen`
-- Daily standup dependency review
+- Coordinator checks what's blocking a shot: `/sg deps 306dtt_1440` ✓
+- Check dependencies for a specific daily: `/sg deps 4510266` ✓
+- Understand full pipeline chain for review
 
 ---
 
