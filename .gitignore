@@ -4,6 +4,10 @@ api.key
 # Space configuration (contains Space IDs)
 spaces.json
 
+# Google Tasks OAuth credentials
+credentials.json
+token.json
+
 # Python
 __pycache__/
 *.py[cod]

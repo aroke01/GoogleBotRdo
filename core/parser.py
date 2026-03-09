@@ -125,7 +125,8 @@ def parseAllCodes(text):
             'tractorUrl': str or None,
             'sharedNote': str or None,
             'subcommand': str or None ('info', 'deps', 'help'),
-            'subcommandCode': str or None
+            'subcommandCode': str or None,
+            'hasTask': bool (True if 📝 emoji present)
         }
     """
     result = {
@@ -135,13 +136,18 @@ def parseAllCodes(text):
         'tractorUrl': None,
         'sharedNote': None,
         'subcommand': None,
-        'subcommandCode': None
+        'subcommandCode': None,
+        'hasTask': False
     }
 
     if not re.search(r'/sg\b', text, re.IGNORECASE):
         return result
 
     result['hasNoteCommand'] = True
+
+    # Detect 📝 emoji for Google Tasks creation
+    if '📝' in text:
+        result['hasTask'] = True
 
     helpMatch = re.search(r'/sg\s+(?:help|--help|-h)\b', text, re.IGNORECASE)
     if helpMatch:

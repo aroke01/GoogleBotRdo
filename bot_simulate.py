@@ -39,6 +39,7 @@ from core.parser import parseAllCodes
 from core.shotgrid import lookupEntity, getAssetInfo, getDependencies
 from core.formatter import formatMultiCodeReply, formatAssetInfo, formatDependencies, formatHelp
 from core.webhook import postToSpace
+from core.tasks import createTaskFromMessage
 
 
 def main():
@@ -220,10 +221,28 @@ def main():
     try:
         response = postToSpace(reply)
         print(f"✓ Posted to Space (HTTP {response.status_code})")
-        sys.exit(0)
     except Exception as exc:
         print(f"✗ Failed to post: {exc}")
         sys.exit(1)
+
+    # Create Google Tasks if 📝 emoji is present
+    if parsed['hasTask']:
+        print()
+        print("📝 Creating Google Tasks...")
+
+        for segment in validCodeSegments:
+            code = segment['code']
+            note = segment.get('note', '') or parsed.get('sharedNote', '')
+            sgLink = segment.get('sgLink', '')
+
+            # Get first tagged name as assignee
+            assignee = parsed['taggedNames'][0] if parsed['taggedNames'] else None
+
+            success = createTaskFromMessage(code, note, sgLink, assignee)
+            if success:
+                print(f"  ✓ Task created for {code}")
+
+    sys.exit(0)
 
 
 if __name__ == "__main__":

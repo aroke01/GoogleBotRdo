@@ -10,6 +10,46 @@
 
 ---
 
+
+
+## Current Sprint — Google Tasks Integration
+
+Goal: when 📝 emoji is in message, create a task in the sender's
+Google Tasks app. Fail silently — never block the bot reply.
+
+### Tasks
+
+- [ ] Enable Google Tasks API in GCP project `pipeline-bot-488915`
+- [ ] Create OAuth 2.0 Desktop app credentials in Cloud Console
+      → download as `credentials.json` to project root
+- [ ] Run `python auth_setup.py` once to authorize → saves `token.json`
+- [ ] NEW FILE: `core/tasks.py`
+      - `getOrCreateTaskList(service, listName="sgbot")` 
+      - `createTask(service, code, note, sgUrl, assignee)`
+      - `buildTasksService(tokenPath, credPath)` 
+- [ ] NEW FILE: `auth_setup.py` — one-time OAuth browser flow
+- [ ] UPDATE: `bots/sgbot.py` — if `hasTask=True` call `createTask()`
+- [ ] UPDATE: `core/parser.py` — set `hasTask = "📝" in message`
+- [ ] UPDATE: `.gitignore` — add `token.json`, `credentials.json`
+- [ ] UPDATE: `requirements.txt` — add `google-auth-oauthlib`,
+      `google-auth-httplib2`, `google-api-python-client`
+- [ ] TEST: send message with 📝 → verify task appears in Google Tasks
+
+### Task format
+
+Title: `Check {code} — {note}`
+Notes: `{sgUrl}\nFrom: {assignee}`
+Due:   today
+List:  `sgbot`
+
+### Done when
+
+Send `/sg prpNolmenStaff check shading 📝` via `bot_simulate.py`
+→ task appears in Google Tasks under `sgbot` list.
+
+
+
+
 ## Phase 1 — CLI Demo ✅
 
 **Complete. Core modules fully functional.**
