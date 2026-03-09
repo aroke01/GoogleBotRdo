@@ -14,13 +14,22 @@
 
 **Complete. Core modules fully functional.**
 
-- `core/parser.py` — message parsing (codes, mentions, notes, tractor URLs, 📝 flag)
-- `core/shotgrid.py` — ShotGrid REST client (Shot → Asset → Version fallback)
-- `core/formatter.py` — reply formatting (single/multi-code, per-code notes, shared notes)
+### Core Functionality
+- `core/parser.py` — message parsing (codes, mentions, notes, tractor URLs, 📝 flag, info subcommand)
+- `core/shotgrid.py` — ShotGrid REST client (Shot → Asset → Version fallback, asset info with publishes)
+- `core/formatter.py` — reply formatting (single/multi-code, per-code notes, shared notes, asset info with warnings)
 - `bots/sgbot.py` — main bot logic
 - `bot_simulate.py` — single message CLI test
 - `bot_interactive.py` — continuous mode CLI test
-- `bot_reply.py` — manual webhook sender
+- `bot_post.py` — manual webhook sender (updated to multi-code)
+
+### Recent Enhancements (March 2026)
+- ✅ Multi-code API consistency (all scripts use `parseAllCodes`)
+- ✅ `/sg info <assetCode>` subcommand
+- ✅ Publish-based status (uses `asset_resolver.py`)
+- ✅ Version mismatch warnings (Model vs Rig, Texture vs Shading)
+- ✅ Approval/Push summaries
+- ✅ Asset review status display
 
 ---
 
@@ -37,10 +46,39 @@ Requires Node.js + clasp in rez. IT request submitted.
 IT request submitted. Once approved:
 
 - [ ] FastAPI wrapper around Phase 1 bot logic
-- [ ] Dockerfile
+- [ ] Dockerfile (bundle Python scripts from http://mtl-webapps01/sg_dependencies/)
 - [ ] Deploy to Cloud Run
 - [ ] Register HTTPS endpoint in Google Cloud Console
 - [ ] Bot goes fully automatic
+
+**Deployment Strategy:**
+- Bundle `asset_resolver.py` and `sg_core.py` from http://mtl-webapps01/sg_dependencies/ in Docker image
+- Include all dependencies in Dockerfile (cannot access internal HTTP server from Cloud Run)
+- Phase 1 local testing uses direct path to webapps server scripts
+
+---
+
+## Sprint — Daily Dependencies Feature
+
+**Status:** Planned
+
+### Goal
+Add `/sg deps <code>` subcommand to list daily dependencies through the chatbot.
+
+### Requirements
+- [ ] Query ShotGrid for upstream/downstream dependencies
+- [ ] Support Shot and Asset dependency queries
+- [ ] Format dependency tree in readable format
+- [ ] Show dependency status (blocked, ready, complete)
+- [ ] Handle circular dependencies gracefully
+- [ ] Add to parser.py as new subcommand
+- [ ] Update formatters for dependency output
+- [ ] Test with real production data
+
+### Use Cases
+- Coordinator checks what's blocking a shot: `/sg deps 306dtt_1440`
+- Check what depends on an asset: `/sg deps chrNolmen`
+- Daily standup dependency review
 
 ---
 
