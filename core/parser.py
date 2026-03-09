@@ -148,6 +148,8 @@ def parseAllCodes(text):
     # Detect 📝 emoji for Google Tasks creation
     if '📝' in text:
         result['hasTask'] = True
+        # Strip emoji from text for further processing
+        text = text.replace('📝', '')
 
     helpMatch = re.search(r'/sg\s+(?:help|--help|-h)\b', text, re.IGNORECASE)
     if helpMatch:

@@ -233,6 +233,10 @@ def main():
         for segment in validCodeSegments:
             code = segment['code']
             note = segment.get('note', '') or parsed.get('sharedNote', '')
+
+            # Strip 📝 emoji from note text
+            note = note.replace('📝', '').strip()
+
             sgLink = segment.get('sgLink', '')
 
             # Get first tagged name as assignee
