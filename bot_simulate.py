@@ -36,8 +36,8 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from core.parser import parseAllCodes
-from core.shotgrid import lookupEntity, getAssetInfo
-from core.formatter import formatMultiCodeReply, formatAssetInfo
+from core.shotgrid import lookupEntity, getAssetInfo, getDependencies
+from core.formatter import formatMultiCodeReply, formatAssetInfo, formatDependencies
 from core.webhook import postToSpace
 
 
@@ -93,6 +93,34 @@ def main():
         assetData = getAssetInfo(assetCode, showCode)
 
         reply = formatAssetInfo(assetData, useMarkdown=True)
+
+        print("=" * 60)
+        print("Bot reply (posting to Space):")
+        print("=" * 60)
+        print(reply)
+        print("=" * 60)
+        print()
+
+        try:
+            response = postToSpace(reply)
+            print(f"✓ Posted to Space (HTTP {response.status_code})")
+            sys.exit(0)
+        except Exception as exc:
+            print(f"✗ Failed to post: {exc}")
+            sys.exit(1)
+
+    if parsed['subcommand'] == 'deps':
+        depsCode = parsed['subcommandCode']
+        if not depsCode:
+            print("⚠️  No code provided for deps subcommand.")
+            sys.exit(0)
+
+        print(f"Deps subcommand detected for: {depsCode}")
+        print()
+
+        depsData = getDependencies(depsCode, showCode)
+
+        reply = formatDependencies(depsData, useMarkdown=True)
 
         print("=" * 60)
         print("Bot reply (posting to Space):")

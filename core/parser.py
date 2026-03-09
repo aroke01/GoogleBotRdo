@@ -104,6 +104,9 @@ def parseAllCodes(text):
     Or info subcommand:
         "/sg info chrNolmen" or "@user /sg info chrNolmen"
 
+    Or deps subcommand:
+        "/sg deps 306dtt_1440" or "/sg deps 1234567" or "/sg deps versionCode"
+
     Args:
         text: Raw message text from Google Space
 
@@ -117,7 +120,7 @@ def parseAllCodes(text):
             ],
             'tractorUrl': str or None,
             'sharedNote': str or None,
-            'subcommand': str or None ('info'),
+            'subcommand': str or None ('info', 'deps'),
             'subcommandCode': str or None
         }
     """
@@ -143,7 +146,15 @@ def parseAllCodes(text):
         allMentions = re.findall(r'@([\w\-À-ÿ]+)', text, re.IGNORECASE)
         result['taggedNames'] = [m.strip() for m in allMentions]
         return result
-    
+
+    depsMatch = re.search(r'/sg\s+deps\s+(\S+)', text, re.IGNORECASE)
+    if depsMatch:
+        result['subcommand'] = 'deps'
+        result['subcommandCode'] = depsMatch.group(1).strip()
+        allMentions = re.findall(r'@([\w\-À-ÿ]+)', text, re.IGNORECASE)
+        result['taggedNames'] = [m.strip() for m in allMentions]
+        return result
+
     allMentions = re.findall(r'@([\w\-À-ÿ]+)', text, re.IGNORECASE)
     result['taggedNames'] = [m.strip() for m in allMentions]
     

@@ -4,6 +4,14 @@ Reply formatter for rdo_googlebot.
 Formats bot replies for Google Spaces with ShotGrid links and status info.
 """
 
+import re
+import sys
+import os
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), 'Python'))
+
+from Python.discovery_approval import classifyVersionDepartment
+
 
 def formatReply(taggedName, code, note, sgData, senderName=None):
     """Format bot reply for Google Space (single line, plain text).
@@ -297,5 +305,102 @@ def formatAssetInfo(assetData, useMarkdown=True):
         lines.append(f"🔗 ShotGrid: {sgUrl}")
     else:
         lines.append("🔗 ShotGrid")
+
+    return "\n".join(lines)
+
+
+def formatDailyAsAsciiTree(dailyNode, depth=0, isLast=True, prefix=''):
+    """Format a daily chain tree node as ASCII art with QC connections.
+
+    Args:
+        dailyNode: DailyNode object from buildDailyChainTree
+        depth: Current depth level
+        isLast: Whether this is the last child at this level
+        prefix: Accumulated prefix for indentation
+
+    Returns:
+        str: ASCII tree representation
+    """
+    lines = []
+
+    # Get version info
+    versionData = dailyNode.version
+    versionCode = versionData.get('code', 'unknown')
+
+    # Extract version from code string (e.g., "v2" from "lay.arsPrecomp.lay.center.v2")
+    versionMatch = re.search(r'\.v(\d+)$|_v(\d+)$', versionCode)
+    if versionMatch:
+        versionNum = versionMatch.group(1) or versionMatch.group(2)
+    else:
+        versionNum = '?'
+
+    # Classify department (use sg_department field first, then parse from code)
+    dept = versionData.get('sg_department')
+    deptFromCode, isQc = classifyVersionDepartment(versionCode)
+    if not dept:
+        dept = deptFromCode
+
+    # Build node line
+    connector = '└── ' if isLast else '├── '
+    deptLabel = f"{dept} QC" if isQc else dept
+    nodeLine = f"{prefix}{connector}({deptLabel}, v{versionNum}) {versionCode}"
+
+    # Add QC sibling connection if present
+    if hasattr(dailyNode, 'qcSibling') and dailyNode.qcSibling:
+        qcVer = dailyNode.qcSibling.version
+        qcCode = qcVer.get('code', 'unknown')
+        nodeLine += f" <---> {qcCode}"
+
+    lines.append(nodeLine)
+
+    # Process children
+    children = dailyNode.children
+    for idx, child in enumerate(children):
+        isLastChild = (idx == len(children) - 1)
+        childPrefix = prefix + ('    ' if isLast else '│   ')
+        childLines = formatDailyAsAsciiTree(child, depth + 1, isLastChild, childPrefix)
+        lines.append(childLines)
+
+    return '\n'.join(lines)
+
+
+def formatDependencies(depsData, useMarkdown=True):
+    """Format dependency tree reply for Google Space.
+
+    Args:
+        depsData: Dictionary from getDependencies() with dependency tree
+        useMarkdown: Use Markdown formatting (default: True)
+
+    Returns:
+        str: Formatted multi-line reply with dependency tree
+    """
+    if not depsData.get('found'):
+        code = depsData.get('code', 'unknown')
+        error = depsData.get('error', 'not found in ShotGrid')
+        return f"❓ {code} — {error}"
+
+    versionCode = depsData.get('versionCode', 'unknown')
+    versionId = depsData.get('versionId')
+    dependencyTree = depsData.get('dependencyTree')
+
+    lines = []
+    lines.append(f"🔗 Dependencies for {versionCode}")
+    lines.append("")
+
+    if dependencyTree:
+        # Format the tree using formatDailyAsAsciiTree from playlist_viewer
+        asciiTree = formatDailyAsAsciiTree(dependencyTree)
+        lines.append(asciiTree)
+    else:
+        lines.append("(No upstream dependencies found)")
+
+    lines.append("")
+
+    # Add ShotGrid link
+    sgUrl = f"https://rodeofx.shotgrid.autodesk.com/detail/Version/{versionId}"
+    if useMarkdown:
+        lines.append(f"<{sgUrl}|🔗 ShotGrid>")
+    else:
+        lines.append(f"🔗 ShotGrid: {sgUrl}")
 
     return "\n".join(lines)

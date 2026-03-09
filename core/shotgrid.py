@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), 'Pyt
 
 from Python.sg_auth import getShotgridConnection
 from Python.asset_resolver import resolveLatestPerDept
+from Python.discovery_approval import buildDailyChainTree
 
 
 def getSgToken():
@@ -185,3 +186,116 @@ def getAssetInfo(assetCode, showCode="lbp3"):
     except Exception as exc:
         print(f"ShotGrid asset info lookup error: {exc}")
         return {'found': False, 'code': assetCode}
+
+
+def getDependencies(code, showCode="lbp3"):
+    """Get dependency tree for a daily (version) by code or ID.
+
+    Accepts version ID (7 digits), version code, or shot code.
+    For shot codes, finds the latest version.
+
+    Args:
+        code: Version ID, version code, or shot code
+        showCode: Show code (default: lbp3, one Space = one show)
+
+    Returns:
+        dict: {
+            'found': bool,
+            'code': str (original input),
+            'versionId': int or None,
+            'versionCode': str or None,
+            'dependencyTree': DailyNode or None (from buildDailyChainTree),
+            'error': str or None
+        }
+    """
+    sg = getSgToken()
+
+    result = {
+        'found': False,
+        'code': code,
+        'versionId': None,
+        'versionCode': None,
+        'dependencyTree': None,
+        'error': None
+    }
+
+    try:
+        versionId = None
+
+        # Try as version ID (7 digits)
+        if code.isdigit() and len(code) == 7:
+            versionId = int(code)
+            version = sg.find_one(
+                "Version",
+                [["id", "is", versionId]],
+                ["code", "id"]
+            )
+            if version:
+                result['versionCode'] = version.get('code')
+            else:
+                result['error'] = f"Version ID {code} not found in ShotGrid"
+                return result
+
+        # Try as version code (contains dots)
+        elif '.' in code:
+            version = sg.find_one(
+                "Version",
+                [["code", "is", code]],
+                ["code", "id"]
+            )
+            if version:
+                versionId = version.get('id')
+                result['versionCode'] = version.get('code')
+            else:
+                result['error'] = f"Version code {code} not found in ShotGrid"
+                return result
+
+        # Try as shot code - find latest version
+        else:
+            shot = sg.find_one(
+                "Shot",
+                [["code", "contains", code]],
+                ["code", "id"]
+            )
+            if not shot:
+                result['error'] = f"Shot {code} not found in ShotGrid"
+                return result
+
+            # Find latest version for this shot
+            versions = sg.find(
+                "Version",
+                [["entity", "is", {"type": "Shot", "id": shot['id']}]],
+                ["code", "id", "created_at"],
+                order=[{"field_name": "created_at", "direction": "desc"}],
+                limit=1
+            )
+            if not versions:
+                result['error'] = f"No versions found for shot {code}"
+                return result
+
+            version = versions[0]
+            versionId = version.get('id')
+            result['versionCode'] = version.get('code')
+
+        if not versionId:
+            result['error'] = "Could not determine version ID"
+            return result
+
+        result['versionId'] = versionId
+
+        # Build dependency tree using discovery_approval
+        print(f"Building dependency tree for version {versionId}...")
+        dependencyTree = buildDailyChainTree(sg, versionId, maxDepth=10)
+
+        if dependencyTree:
+            result['found'] = True
+            result['dependencyTree'] = dependencyTree
+        else:
+            result['error'] = "Failed to build dependency tree (no upstream dependencies found)"
+
+        return result
+
+    except Exception as exc:
+        print(f"ShotGrid dependency lookup error: {exc}")
+        result['error'] = str(exc)
+        return result
