@@ -108,6 +108,9 @@ def parseAllCodes(text):
         "/sg dep 306dtt_1440" or "/sg deps 1234567" or "/sg dependency versionCode"
         "/sg dependencies 306dtt_1440" (all variations accepted)
 
+    Or help subcommand:
+        "/sg help" or "/sg --help" or "/sg -h"
+
     Args:
         text: Raw message text from Google Space
 
@@ -121,7 +124,7 @@ def parseAllCodes(text):
             ],
             'tractorUrl': str or None,
             'sharedNote': str or None,
-            'subcommand': str or None ('info', 'deps'),
+            'subcommand': str or None ('info', 'deps', 'help'),
             'subcommandCode': str or None
         }
     """
@@ -139,6 +142,13 @@ def parseAllCodes(text):
         return result
 
     result['hasNoteCommand'] = True
+
+    helpMatch = re.search(r'/sg\s+(?:help|--help|-h)\b', text, re.IGNORECASE)
+    if helpMatch:
+        result['subcommand'] = 'help'
+        allMentions = re.findall(r'@([\w\-À-ÿ]+)', text, re.IGNORECASE)
+        result['taggedNames'] = [m.strip() for m in allMentions]
+        return result
 
     infoMatch = re.search(r'/sg\s+info\s+(\S+)', text, re.IGNORECASE)
     if infoMatch:

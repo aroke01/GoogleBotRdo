@@ -364,6 +364,50 @@ def formatDailyAsAsciiTree(dailyNode, depth=0, isLast=True, prefix=''):
     return '\n'.join(lines)
 
 
+def formatHelp(useMarkdown=True):
+    """Format help message listing all available commands.
+
+    Args:
+        useMarkdown: Use Markdown formatting (default: True)
+
+    Returns:
+        str: Formatted help message
+    """
+    lines = []
+    lines.append("📖 ShotGrid Bot Commands")
+    lines.append("")
+    lines.append("Available commands:")
+    lines.append("")
+    lines.append("1. Record Notes")
+    lines.append("   @user /sg <code> <note>")
+    lines.append("   Record a note for a shot/asset and notify coordinator")
+    lines.append("   Example: @lpare /sg 306dtt_1440 check the lighting please")
+    lines.append("")
+    lines.append("2. Multiple Codes")
+    lines.append("   @user /sg <code1> note1, <code2> note2")
+    lines.append("   Record notes for multiple codes at once")
+    lines.append("   Example: @lpare /sg 306dtt_1440 check qc, chrNolmen rig broken")
+    lines.append("")
+    lines.append("3. Asset Info")
+    lines.append("   /sg info <assetCode>")
+    lines.append("   Show detailed asset information and publish status by department")
+    lines.append("   Example: /sg info chrNolmen")
+    lines.append("")
+    lines.append("4. Dependencies")
+    lines.append("   /sg dep <code>")
+    lines.append("   Show upstream dependency tree for a daily (accepts: dep, deps, dependency, dependencies)")
+    lines.append("   Example: /sg dep 4510266")
+    lines.append("   Example: /sg deps 313lhb_2840.qcani.primary.main.defPart.v1")
+    lines.append("")
+    lines.append("5. Help")
+    lines.append("   /sg help")
+    lines.append("   Show this help message (accepts: help, --help, -h)")
+    lines.append("")
+    lines.append("📝 Add 📝 emoji to create Google Task")
+
+    return '\n'.join(lines)
+
+
 def formatDependencies(depsData, useMarkdown=True):
     """Format dependency tree reply for Google Space.
 
