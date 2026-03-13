@@ -109,7 +109,7 @@ Create `api.key` file in project root:
 
 ```
 SG_URL=https://rodeofx.shotgrid.autodesk.com
-SG_SCRIPT_NAME=shell
+SG_SCRIPT_NAME=
 SG_SCRIPT_KEY=your_api_key_here
 ```
 
